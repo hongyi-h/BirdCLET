@@ -1,0 +1,20 @@
+name: birdclef
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch>=2.1
+  - torchaudio>=2.1
+  - torchvision>=0.16
+  - numpy
+  - pandas
+  - scikit-learn
+  - librosa
+  - pip
+  - pip:
+    - timm>=1.0
+    - soundfile
+    - onnxruntime
+    - onnx
