@@ -53,8 +53,9 @@ def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
     model.train()
     losses = []
     criterion = nn.BCEWithLogitsLoss()
+    total = len(loader)
 
-    for audio, targets in loader:
+    for i, (audio, targets) in enumerate(loader):
         audio, targets = audio.to(device), targets.to(device)
         optimizer.zero_grad()
 
@@ -66,6 +67,9 @@ def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
         scaler.step(optimizer)
         scaler.update()
         losses.append(loss.item())
+
+        if i % 50 == 0:
+            print(f"  [train] batch {i}/{total} | loss={loss.item():.4f}", flush=True)
 
     return np.mean(losses)
 
@@ -141,13 +145,18 @@ def main():
     train_ds = ConcatDataset([focal_train_ds] + [soundscape_ds] * 5)
     val_ds = focal_val_ds
 
+    num_workers = int(os.environ.get("NUM_WORKERS", 0))
+    print(f"DataLoader num_workers={num_workers}")
+
     train_loader = DataLoader(train_ds, batch_size=CFG.BATCH_SIZE, shuffle=True,
-                              num_workers=4, pin_memory=True, drop_last=True)
+                              num_workers=num_workers, pin_memory=True, drop_last=True)
     val_loader = DataLoader(val_ds, batch_size=CFG.BATCH_SIZE, shuffle=False,
-                            num_workers=4, pin_memory=True)
+                            num_workers=num_workers, pin_memory=True)
 
     # --- Model ---
+    print("Loading model...", flush=True)
     model = BirdModel(pretrained=True).to(device)
+    print(f"Model loaded on {device}. Params: {sum(p.numel() for p in model.parameters())/1e6:.1f}M", flush=True)
     optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.LR, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.EPOCHS)
     scaler = GradScaler(device=device_type, enabled=device_type != "cpu")
@@ -156,7 +165,9 @@ def main():
     best_auc = 0.0
 
     for epoch in range(CFG.EPOCHS):
+        print(f"\n--- Epoch {epoch+1}/{CFG.EPOCHS} ---", flush=True)
         train_loss = train_one_epoch(model, train_loader, optimizer, scaler, device, device_type)
+        print("  Validating...", flush=True)
         val_auc = validate(model, val_loader, device, device_type)
         scheduler.step()
 
