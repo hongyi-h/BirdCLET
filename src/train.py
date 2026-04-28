@@ -101,11 +101,33 @@ def main():
     train_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train.csv"))
     train_df["primary_label"] = train_df["primary_label"].astype(str)
 
-    # Stratified split on primary_label
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=CFG.SEED)
-    train_idx, val_idx = next(skf.split(train_df, train_df["primary_label"]))
-    focal_train_df = train_df.iloc[train_idx]
-    focal_val_df = train_df.iloc[val_idx]
+    # Stratified split on primary_label.
+    # Classes with only 1 sample cannot be split into train+val; keep them in
+    # train only and exclude from the stratified fold to avoid sklearn warnings.
+    label_counts = train_df["primary_label"].value_counts()
+    rare_mask = train_df["primary_label"].map(label_counts) < 2
+    rare_df = train_df[rare_mask]
+    common_df = train_df[~rare_mask]
+
+    if common_df.empty:
+        raise ValueError("No class has ≥2 samples; cannot build a validation split.")
+
+    min_common_count = int(common_df["primary_label"].value_counts().min())
+    n_splits = min(5, min_common_count)
+    if n_splits < 5:
+        print(f"[split] Reduced n_splits to {n_splits} (min class count = {min_common_count})")
+    if len(rare_df) > 0:
+        print(f"[split] {len(rare_df)} singleton sample(s) kept train-only: "
+              f"{sorted(rare_df['primary_label'].unique())}")
+
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=CFG.SEED)
+    train_idx, val_idx = next(skf.split(common_df, common_df["primary_label"]))
+    common_train_df = common_df.iloc[train_idx]
+    common_val_df = common_df.iloc[val_idx]
+
+    focal_train_df = pd.concat([common_train_df, rare_df], ignore_index=True)
+    focal_train_df = focal_train_df.sample(frac=1.0, random_state=CFG.SEED).reset_index(drop=True)
+    focal_val_df = common_val_df.reset_index(drop=True)
 
     focal_train_ds = FocalAudioDataset(focal_train_df, label_map)
     focal_val_ds = FocalAudioDataset(focal_val_df, label_map)
