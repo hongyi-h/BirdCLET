@@ -9,16 +9,32 @@ from torch.amp import GradScaler, autocast
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 
+try:
+    import torch_musa  # noqa: F401
+except ImportError:
+    torch_musa = None
+
 import src.config as CFG
 from src.dataset import FocalAudioDataset, SoundscapeDataset, build_label_map
 from src.model import BirdModel
+
+
+def get_device_type():
+    if hasattr(torch, "musa") and torch.musa.is_available():
+        return "musa"
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
 
 
 def set_seed(seed=CFG.SEED):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    if hasattr(torch, "musa") and torch.musa.is_available():
+        torch.musa.manual_seed_all(seed)
 
 
 def compute_macro_auc(targets, preds):
@@ -33,7 +49,7 @@ def compute_macro_auc(targets, preds):
     return np.mean(aucs) if aucs else 0.0
 
 
-def train_one_epoch(model, loader, optimizer, scaler, device):
+def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
     model.train()
     losses = []
     criterion = nn.BCEWithLogitsLoss()
@@ -42,7 +58,7 @@ def train_one_epoch(model, loader, optimizer, scaler, device):
         audio, targets = audio.to(device), targets.to(device)
         optimizer.zero_grad()
 
-        with autocast("cuda"):
+        with autocast(device_type=amp_device, enabled=amp_device != "cpu"):
             logits = model(audio)
             loss = criterion(logits, targets)
 
@@ -55,13 +71,13 @@ def train_one_epoch(model, loader, optimizer, scaler, device):
 
 
 @torch.no_grad()
-def validate(model, loader, device):
+def validate(model, loader, device, amp_device):
     model.eval()
     all_preds, all_targets = [], []
 
     for audio, targets in loader:
         audio = audio.to(device)
-        with autocast("cuda"):
+        with autocast(device_type=amp_device, enabled=amp_device != "cpu"):
             logits = model(audio)
         preds = torch.sigmoid(logits).cpu().numpy()
         all_preds.append(preds)
@@ -75,7 +91,8 @@ def validate(model, loader, device):
 
 def main():
     set_seed()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device_type = get_device_type()
+    device = torch.device(device_type)
     print(f"Device: {device}")
 
     label_map = build_label_map()
@@ -111,14 +128,14 @@ def main():
     model = BirdModel(pretrained=True).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.LR, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.EPOCHS)
-    scaler = GradScaler()
+    scaler = GradScaler(device=device_type, enabled=device_type != "cpu")
 
     os.makedirs(CFG.CHECKPOINT_DIR, exist_ok=True)
     best_auc = 0.0
 
     for epoch in range(CFG.EPOCHS):
-        train_loss = train_one_epoch(model, train_loader, optimizer, scaler, device)
-        val_auc = validate(model, val_loader, device)
+        train_loss = train_one_epoch(model, train_loader, optimizer, scaler, device, device_type)
+        val_auc = validate(model, val_loader, device, device_type)
         scheduler.step()
 
         lr = optimizer.param_groups[0]["lr"]
