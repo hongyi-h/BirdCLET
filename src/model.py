@@ -26,12 +26,11 @@ class MelSpecTransform(nn.Module):
         return x
 
 
-class BirdModel(nn.Module):
-    """Raw waveform -> mel spectrogram -> EfficientNet -> attention pool -> 234 logits."""
+class BirdBackbone(nn.Module):
+    """Mel spectrogram (B, 1, n_mels, T) -> 234 logits. ONNX-exportable."""
 
     def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True):
         super().__init__()
-        self.mel_spec = MelSpecTransform()
         self.backbone = timm.create_model(
             CFG.MODEL_NAME,
             pretrained=pretrained,
@@ -44,10 +43,7 @@ class BirdModel(nn.Module):
         self.classifier = nn.Linear(self.feat_dim, num_classes)
 
     def forward(self, x):
-        # x: (B, num_samples) raw waveform
-        x = self.mel_spec(x)  # (B, n_mels, T)
-
-        x = x.unsqueeze(1)  # (B, 1, n_mels, T)
+        # x: (B, 1, n_mels, T) mel spectrogram
         x = self.backbone(x)  # (B, C, H, W)
 
         b, c, h, w = x.shape
@@ -57,3 +53,18 @@ class BirdModel(nn.Module):
         x = (x * att).sum(dim=1)  # (B, C)
 
         return self.classifier(x)  # (B, num_classes)
+
+
+class BirdModel(nn.Module):
+    """Full training model: raw waveform -> mel -> backbone -> logits."""
+
+    def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True):
+        super().__init__()
+        self.mel_spec = MelSpecTransform()
+        self.backbone = BirdBackbone(num_classes=num_classes, pretrained=pretrained)
+
+    def forward(self, x):
+        # x: (B, num_samples) raw waveform
+        x = self.mel_spec(x)  # (B, n_mels, T)
+        x = x.unsqueeze(1)    # (B, 1, n_mels, T)
+        return self.backbone(x)
