@@ -14,8 +14,13 @@ def export():
 
     # Load full model (mel_spec + backbone)
     full_model = BirdModel(pretrained=False).to(device)
-    full_model.load_state_dict(torch.load(os.path.join(CFG.CHECKPOINT_DIR, "best.pt"), map_location=device))
+    # Try v2 checkpoint first, fall back to v1
+    ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, "best_v2.pt")
+    if not os.path.exists(ckpt_path):
+        ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, "best.pt")
+    full_model.load_state_dict(torch.load(ckpt_path, map_location=device))
     full_model.eval()
+    print(f"Loaded checkpoint: {ckpt_path}")
 
     # Extract just the backbone (takes mel input, ONNX-exportable)
     backbone = full_model.backbone
