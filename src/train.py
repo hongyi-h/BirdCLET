@@ -5,7 +5,6 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, ConcatDataset
-from torch.amp import GradScaler, autocast
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 
@@ -49,7 +48,7 @@ def compute_macro_auc(targets, preds):
     return np.mean(aucs) if aucs else 0.0
 
 
-def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
+def train_one_epoch(model, loader, optimizer, device):
     model.train()
     losses = []
     criterion = nn.BCEWithLogitsLoss()
@@ -59,13 +58,11 @@ def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
         audio, targets = audio.to(device), targets.to(device)
         optimizer.zero_grad()
 
-        with autocast(device_type=amp_device, enabled=amp_device != "cpu"):
-            logits = model(audio)
-            loss = criterion(logits, targets)
+        logits = model(audio)
+        loss = criterion(logits, targets)
 
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+        loss.backward()
+        optimizer.step()
         losses.append(loss.item())
 
         if i % 50 == 0:
@@ -75,14 +72,13 @@ def train_one_epoch(model, loader, optimizer, scaler, device, amp_device):
 
 
 @torch.no_grad()
-def validate(model, loader, device, amp_device):
+def validate(model, loader, device):
     model.eval()
     all_preds, all_targets = [], []
 
     for audio, targets in loader:
         audio = audio.to(device)
-        with autocast(device_type=amp_device, enabled=amp_device != "cpu"):
-            logits = model(audio)
+        logits = model(audio)
         preds = torch.sigmoid(logits).cpu().numpy()
         all_preds.append(preds)
         all_targets.append(targets.numpy())
@@ -159,16 +155,15 @@ def main():
     print(f"Model loaded on {device}. Params: {sum(p.numel() for p in model.parameters())/1e6:.1f}M", flush=True)
     optimizer = torch.optim.AdamW(model.parameters(), lr=CFG.LR, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=CFG.EPOCHS)
-    scaler = GradScaler(device=device_type, enabled=device_type != "cpu")
 
     os.makedirs(CFG.CHECKPOINT_DIR, exist_ok=True)
     best_auc = 0.0
 
     for epoch in range(CFG.EPOCHS):
         print(f"\n--- Epoch {epoch+1}/{CFG.EPOCHS} ---", flush=True)
-        train_loss = train_one_epoch(model, train_loader, optimizer, scaler, device, device_type)
+        train_loss = train_one_epoch(model, train_loader, optimizer, device)
         print("  Validating...", flush=True)
-        val_auc = validate(model, val_loader, device, device_type)
+        val_auc = validate(model, val_loader, device)
         scheduler.step()
 
         lr = optimizer.param_groups[0]["lr"]

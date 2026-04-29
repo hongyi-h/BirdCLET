@@ -45,8 +45,7 @@ class BirdModel(nn.Module):
 
     def forward(self, x):
         # x: (B, num_samples) raw waveform
-        with torch.amp.autocast("cuda", enabled=False):
-            x = self.mel_spec(x)  # (B, n_mels, T)
+        x = self.mel_spec(x)  # (B, n_mels, T)
 
         x = x.unsqueeze(1)  # (B, 1, n_mels, T)
         x = self.backbone(x)  # (B, C, H, W)
