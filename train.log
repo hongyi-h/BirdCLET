@@ -334,3 +334,17 @@ Epoch 15/30 | loss=0.0040 | val_auc=0.9543 | lr=0.000500
   [train] batch 700/786 | loss=0.0051
   [train] batch 750/786 | loss=0.0026
   Validating...
+Epoch 16/30 | loss=0.0037 | val_auc=0.9587 | lr=0.000448
+
+--- Epoch 17/30 ---
+  [train] batch 0/786 | loss=0.0015
+  [train] batch 50/786 | loss=0.0043
+  [train] batch 100/786 | loss=0.0050
+  [train] batch 150/786 | loss=0.0030
+  [train] batch 200/786 | loss=0.0017
+  [train] batch 250/786 | loss=0.0032
+  [train] batch 300/786 | loss=0.0030
+  [train] batch 350/786 | loss=0.0016
+  [train] batch 400/786 | loss=0.0031
+  [train] batch 450/786 | loss=0.0033
+  [train] batch 500/786 | loss=0.0035
