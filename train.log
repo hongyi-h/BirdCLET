@@ -3,433 +3,104 @@ Device: cuda
 [split] 4 singleton sample(s) kept train-only: ['116570', '23150', '23724', '516975']
 DataLoader num_workers=0
 Loading model...
+[12:51:56.217][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:06.457][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:16.698][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:26.938][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:37.179][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:47.418][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:52:57.658][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:07.898][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:18.137][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:28.378][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:38.618][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:48.858][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:53:59.097][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:54:09.339][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:54:19.578][MXKW][E]queues.c                :826 : [mxkwCreateQueueBlock][Hint]ioctl create queue block timeout, gpu_id:22597 type:21. Retrying.
+[12:57:21.523][MXKW][E]queues.c                :840 : [mxkwCreateQueueBlock][Hint]Retried ioctl create queue block succeed, gpu_id:22597 type:21.
 Model loaded on cuda. Params: 4.3M
 
 --- Epoch 1/30 ---
 /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Attempting to run cuBLAS, but there was no current CUDA context! Attempting to set the primary context... (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:183.)
   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
   [train] batch 0/786 | loss=0.6998
-  [train] batch 50/786 | loss=0.0293
-  [train] batch 100/786 | loss=0.0268
-  [train] batch 150/786 | loss=0.0238
-  [train] batch 200/786 | loss=0.0249
-  [train] batch 250/786 | loss=0.0214
-  [train] batch 300/786 | loss=0.0198
-  [train] batch 350/786 | loss=0.0173
-  [train] batch 400/786 | loss=0.0169
-  [train] batch 450/786 | loss=0.0184
-  [train] batch 500/786 | loss=0.0148
-  [train] batch 550/786 | loss=0.0155
-  [train] batch 600/786 | loss=0.0183
-  [train] batch 650/786 | loss=0.0127
-  [train] batch 700/786 | loss=0.0125
-  [train] batch 750/786 | loss=0.0138
+  [train] batch 50/786 | loss=0.0286
+  [train] batch 100/786 | loss=0.0261
+  [train] batch 150/786 | loss=0.0236
+  [train] batch 200/786 | loss=0.0236
+  [train] batch 250/786 | loss=0.0213
+  [train] batch 300/786 | loss=0.0200
+  [train] batch 350/786 | loss=0.0186
+  [train] batch 400/786 | loss=0.0170
+  [train] batch 450/786 | loss=0.0185
+  [train] batch 500/786 | loss=0.0143
+  [train] batch 550/786 | loss=0.0156
+  [train] batch 600/786 | loss=0.0171
+  [train] batch 650/786 | loss=0.0128
+  [train] batch 700/786 | loss=0.0127
+  [train] batch 750/786 | loss=0.0136
   Validating...
-Epoch 1/30 | loss=0.0242 | val_auc=0.8930 | lr=0.000997
-  -> Saved best model (AUC=0.8930)
+Epoch 1/30 | loss=0.0243 | val_auc=0.8966 | lr=0.000997
+  -> Saved best model (AUC=0.8966)
 
 --- Epoch 2/30 ---
-  [train] batch 0/786 | loss=0.0159
-  [train] batch 50/786 | loss=0.0112
-  [train] batch 100/786 | loss=0.0173
-  [train] batch 150/786 | loss=0.0175
-  [train] batch 200/786 | loss=0.0141
-  [train] batch 250/786 | loss=0.0143
-  [train] batch 300/786 | loss=0.0139
-  [train] batch 350/786 | loss=0.0102
-  [train] batch 400/786 | loss=0.0163
-  [train] batch 450/786 | loss=0.0137
-  [train] batch 500/786 | loss=0.0149
-  [train] batch 550/786 | loss=0.0119
-  [train] batch 600/786 | loss=0.0128
-  [train] batch 650/786 | loss=0.0116
-  [train] batch 700/786 | loss=0.0100
-  [train] batch 750/786 | loss=0.0108
-  Validating...
-Epoch 2/30 | loss=0.0127 | val_auc=0.9197 | lr=0.000989
-  -> Saved best model (AUC=0.9197)
-
---- Epoch 3/30 ---
-  [train] batch 0/786 | loss=0.0162
-  [train] batch 50/786 | loss=0.0098
-  [train] batch 100/786 | loss=0.0103
-  [train] batch 150/786 | loss=0.0081
-  [train] batch 200/786 | loss=0.0116
-  [train] batch 250/786 | loss=0.0137
-  [train] batch 300/786 | loss=0.0084
-  [train] batch 350/786 | loss=0.0101
-  [train] batch 400/786 | loss=0.0073
-  [train] batch 450/786 | loss=0.0075
-  [train] batch 500/786 | loss=0.0072
-  [train] batch 550/786 | loss=0.0084
-  [train] batch 600/786 | loss=0.0108
-  [train] batch 650/786 | loss=0.0098
-  [train] batch 700/786 | loss=0.0080
+  [train] batch 0/786 | loss=0.0150
+  [train] batch 50/786 | loss=0.0117
+  [train] batch 100/786 | loss=0.0155
+  [train] batch 150/786 | loss=0.0171
+  [train] batch 200/786 | loss=0.0140
+  [train] batch 250/786 | loss=0.0119
+  [train] batch 300/786 | loss=0.0127
+  [train] batch 350/786 | loss=0.0117
+  [train] batch 400/786 | loss=0.0152
+  [train] batch 450/786 | loss=0.0121
+  [train] batch 500/786 | loss=0.0124
+  [train] batch 550/786 | loss=0.0124
+  [train] batch 600/786 | loss=0.0139
+  [train] batch 650/786 | loss=0.0113
+  [train] batch 700/786 | loss=0.0099
   [train] batch 750/786 | loss=0.0103
   Validating...
-Epoch 3/30 | loss=0.0102 | val_auc=0.9389 | lr=0.000976
-  -> Saved best model (AUC=0.9389)
+Epoch 2/30 | loss=0.0124 | val_auc=0.9259 | lr=0.000989
+  -> Saved best model (AUC=0.9259)
+
+--- Epoch 3/30 ---
+  [train] batch 0/786 | loss=0.0139
+  [train] batch 50/786 | loss=0.0090
+  [train] batch 100/786 | loss=0.0098
+  [train] batch 150/786 | loss=0.0067
+  [train] batch 200/786 | loss=0.0129
+  [train] batch 250/786 | loss=0.0119
+  [train] batch 300/786 | loss=0.0107
+  [train] batch 350/786 | loss=0.0110
+  [train] batch 400/786 | loss=0.0079
+  [train] batch 450/786 | loss=0.0116
+  [train] batch 500/786 | loss=0.0079
+  [train] batch 550/786 | loss=0.0077
+  [train] batch 600/786 | loss=0.0116
+  [train] batch 650/786 | loss=0.0088
+  [train] batch 700/786 | loss=0.0076
+  [train] batch 750/786 | loss=0.0107
+  Validating...
+Epoch 3/30 | loss=0.0106 | val_auc=0.9410 | lr=0.000976
+  -> Saved best model (AUC=0.9410)
 
 --- Epoch 4/30 ---
-  [train] batch 0/786 | loss=0.0066
+  [train] batch 0/786 | loss=0.0071
   [train] batch 50/786 | loss=0.0079
-  [train] batch 100/786 | loss=0.0105
-  [train] batch 150/786 | loss=0.0081
-  [train] batch 200/786 | loss=0.0091
-  [train] batch 250/786 | loss=0.0081
-  [train] batch 300/786 | loss=0.0087
-  [train] batch 350/786 | loss=0.0103
-  [train] batch 400/786 | loss=0.0112
-  [train] batch 450/786 | loss=0.0097
-  [train] batch 500/786 | loss=0.0067
-  [train] batch 550/786 | loss=0.0065
-  [train] batch 600/786 | loss=0.0094
-  [train] batch 650/786 | loss=0.0076
-  [train] batch 700/786 | loss=0.0057
-  [train] batch 750/786 | loss=0.0057
-  Validating...
-Epoch 4/30 | loss=0.0091 | val_auc=0.9390 | lr=0.000957
-  -> Saved best model (AUC=0.9390)
-
---- Epoch 5/30 ---
-  [train] batch 0/786 | loss=0.0055
-  [train] batch 50/786 | loss=0.0059
-  [train] batch 100/786 | loss=0.0103
-  [train] batch 150/786 | loss=0.0072
-  [train] batch 200/786 | loss=0.0050
-  [train] batch 250/786 | loss=0.0120
-  [train] batch 300/786 | loss=0.0107
-  [train] batch 350/786 | loss=0.0079
-  [train] batch 400/786 | loss=0.0065
-  [train] batch 450/786 | loss=0.0075
-  [train] batch 500/786 | loss=0.0054
-  [train] batch 550/786 | loss=0.0079
-  [train] batch 600/786 | loss=0.0066
-  [train] batch 650/786 | loss=0.0056
-  [train] batch 700/786 | loss=0.0072
-  [train] batch 750/786 | loss=0.0088
-  Validating...
-Epoch 5/30 | loss=0.0082 | val_auc=0.9513 | lr=0.000933
-  -> Saved best model (AUC=0.9513)
-
---- Epoch 6/30 ---
-  [train] batch 0/786 | loss=0.0047
-  [train] batch 50/786 | loss=0.0046
-  [train] batch 100/786 | loss=0.0076
-  [train] batch 150/786 | loss=0.0064
-  [train] batch 200/786 | loss=0.0064
-  [train] batch 250/786 | loss=0.0105
-  [train] batch 300/786 | loss=0.0126
-  [train] batch 350/786 | loss=0.0074
-  [train] batch 400/786 | loss=0.0075
-  [train] batch 450/786 | loss=0.0066
-  [train] batch 500/786 | loss=0.0061
-  [train] batch 550/786 | loss=0.0068
-  [train] batch 600/786 | loss=0.0065
-  [train] batch 650/786 | loss=0.0071
-  [train] batch 700/786 | loss=0.0057
-  [train] batch 750/786 | loss=0.0064
-  Validating...
-Epoch 6/30 | loss=0.0075 | val_auc=0.9485 | lr=0.000905
-
---- Epoch 7/30 ---
-  [train] batch 0/786 | loss=0.0037
-  [train] batch 50/786 | loss=0.0102
-  [train] batch 100/786 | loss=0.0101
-  [train] batch 150/786 | loss=0.0090
-  [train] batch 200/786 | loss=0.0027
+  [train] batch 100/786 | loss=0.0106
+  [train] batch 150/786 | loss=0.0083
+  [train] batch 200/786 | loss=0.0087
   [train] batch 250/786 | loss=0.0083
-  [train] batch 300/786 | loss=0.0051
-  [train] batch 350/786 | loss=0.0108
-  [train] batch 400/786 | loss=0.0105
-  [train] batch 450/786 | loss=0.0099
-  [train] batch 500/786 | loss=0.0076
-  [train] batch 550/786 | loss=0.0073
-  [train] batch 600/786 | loss=0.0108
-  [train] batch 650/786 | loss=0.0068
-  [train] batch 700/786 | loss=0.0101
-  [train] batch 750/786 | loss=0.0054
-  Validating...
-Epoch 7/30 | loss=0.0072 | val_auc=0.9519 | lr=0.000872
-  -> Saved best model (AUC=0.9519)
-
---- Epoch 8/30 ---
-  [train] batch 0/786 | loss=0.0067
-  [train] batch 50/786 | loss=0.0053
-  [train] batch 100/786 | loss=0.0031
-  [train] batch 150/786 | loss=0.0043
-  [train] batch 200/786 | loss=0.0042
-  [train] batch 250/786 | loss=0.0066
-  [train] batch 300/786 | loss=0.0077
-  [train] batch 350/786 | loss=0.0063
-  [train] batch 400/786 | loss=0.0085
-  [train] batch 450/786 | loss=0.0072
-  [train] batch 500/786 | loss=0.0072
-  [train] batch 550/786 | loss=0.0087
-  [train] batch 600/786 | loss=0.0040
-  [train] batch 650/786 | loss=0.0079
-  [train] batch 700/786 | loss=0.0047
-  [train] batch 750/786 | loss=0.0070
-  Validating...
-Epoch 8/30 | loss=0.0065 | val_auc=0.9512 | lr=0.000835
-
---- Epoch 9/30 ---
-  [train] batch 0/786 | loss=0.0029
-  [train] batch 50/786 | loss=0.0067
-  [train] batch 100/786 | loss=0.0068
-  [train] batch 150/786 | loss=0.0103
-  [train] batch 200/786 | loss=0.0065
-  [train] batch 250/786 | loss=0.0021
-  [train] batch 300/786 | loss=0.0079
-  [train] batch 350/786 | loss=0.0061
-  [train] batch 400/786 | loss=0.0070
-  [train] batch 450/786 | loss=0.0071
-  [train] batch 500/786 | loss=0.0080
-  [train] batch 550/786 | loss=0.0054
-  [train] batch 600/786 | loss=0.0062
-  [train] batch 650/786 | loss=0.0098
-  [train] batch 700/786 | loss=0.0064
-  [train] batch 750/786 | loss=0.0025
-  Validating...
-Epoch 9/30 | loss=0.0062 | val_auc=0.9553 | lr=0.000794
-  -> Saved best model (AUC=0.9553)
-
---- Epoch 10/30 ---
-  [train] batch 0/786 | loss=0.0063
-  [train] batch 50/786 | loss=0.0030
-  [train] batch 100/786 | loss=0.0045
-  [train] batch 150/786 | loss=0.0024
-  [train] batch 200/786 | loss=0.0081
-  [train] batch 250/786 | loss=0.0039
-  [train] batch 300/786 | loss=0.0064
-  [train] batch 350/786 | loss=0.0116
-  [train] batch 400/786 | loss=0.0060
-  [train] batch 450/786 | loss=0.0038
-  [train] batch 500/786 | loss=0.0083
-  [train] batch 550/786 | loss=0.0078
-  [train] batch 600/786 | loss=0.0057
-  [train] batch 650/786 | loss=0.0041
-  [train] batch 700/786 | loss=0.0092
-  [train] batch 750/786 | loss=0.0033
-  Validating...
-Epoch 10/30 | loss=0.0056 | val_auc=0.9565 | lr=0.000750
-  -> Saved best model (AUC=0.9565)
-
---- Epoch 11/30 ---
-  [train] batch 0/786 | loss=0.0052
-  [train] batch 50/786 | loss=0.0034
-  [train] batch 100/786 | loss=0.0046
-  [train] batch 150/786 | loss=0.0043
-  [train] batch 200/786 | loss=0.0057
-  [train] batch 250/786 | loss=0.0050
-  [train] batch 300/786 | loss=0.0087
-  [train] batch 350/786 | loss=0.0066
-  [train] batch 400/786 | loss=0.0062
-  [train] batch 450/786 | loss=0.0044
-  [train] batch 500/786 | loss=0.0076
-  [train] batch 550/786 | loss=0.0044
-  [train] batch 600/786 | loss=0.0044
-  [train] batch 650/786 | loss=0.0064
-  [train] batch 700/786 | loss=0.0055
-  [train] batch 750/786 | loss=0.0048
-  Validating...
-Epoch 11/30 | loss=0.0056 | val_auc=0.9537 | lr=0.000703
-
---- Epoch 12/30 ---
-  [train] batch 0/786 | loss=0.0032
-  [train] batch 50/786 | loss=0.0037
-  [train] batch 100/786 | loss=0.0041
-  [train] batch 150/786 | loss=0.0052
-  [train] batch 200/786 | loss=0.0048
-  [train] batch 250/786 | loss=0.0053
-  [train] batch 300/786 | loss=0.0039
-  [train] batch 350/786 | loss=0.0051
-  [train] batch 400/786 | loss=0.0055
-  [train] batch 450/786 | loss=0.0063
-  [train] batch 500/786 | loss=0.0030
-  [train] batch 550/786 | loss=0.0058
-  [train] batch 600/786 | loss=0.0037
-  [train] batch 650/786 | loss=0.0063
-  [train] batch 700/786 | loss=0.0051
-  [train] batch 750/786 | loss=0.0043
-  Validating...
-Epoch 12/30 | loss=0.0049 | val_auc=0.9557 | lr=0.000655
-
---- Epoch 13/30 ---
-  [train] batch 0/786 | loss=0.0032
-  [train] batch 50/786 | loss=0.0036
-  [train] batch 100/786 | loss=0.0050
-  [train] batch 150/786 | loss=0.0028
-  [train] batch 200/786 | loss=0.0058
-  [train] batch 250/786 | loss=0.0048
-  [train] batch 300/786 | loss=0.0037
-  [train] batch 350/786 | loss=0.0036
-  [train] batch 400/786 | loss=0.0045
-  [train] batch 450/786 | loss=0.0040
-  [train] batch 500/786 | loss=0.0041
-  [train] batch 550/786 | loss=0.0039
-  [train] batch 600/786 | loss=0.0030
-  [train] batch 650/786 | loss=0.0041
-  [train] batch 700/786 | loss=0.0023
-  [train] batch 750/786 | loss=0.0055
-  Validating...
-Epoch 13/30 | loss=0.0046 | val_auc=0.9550 | lr=0.000604
-
---- Epoch 14/30 ---
-  [train] batch 0/786 | loss=0.0045
-  [train] batch 50/786 | loss=0.0035
-  [train] batch 100/786 | loss=0.0023
-  [train] batch 150/786 | loss=0.0058
-  [train] batch 200/786 | loss=0.0044
-  [train] batch 250/786 | loss=0.0061
-  [train] batch 300/786 | loss=0.0061
-  [train] batch 350/786 | loss=0.0036
-  [train] batch 400/786 | loss=0.0039
-  [train] batch 450/786 | loss=0.0061
-  [train] batch 500/786 | loss=0.0018
-  [train] batch 550/786 | loss=0.0037
-  [train] batch 600/786 | loss=0.0029
-  [train] batch 650/786 | loss=0.0062
-  [train] batch 700/786 | loss=0.0023
-  [train] batch 750/786 | loss=0.0027
-  Validating...
-Epoch 14/30 | loss=0.0044 | val_auc=0.9591 | lr=0.000552
-  -> Saved best model (AUC=0.9591)
-
---- Epoch 15/30 ---
-  [train] batch 0/786 | loss=0.0033
-  [train] batch 50/786 | loss=0.0039
-  [train] batch 100/786 | loss=0.0059
-  [train] batch 150/786 | loss=0.0049
-  [train] batch 200/786 | loss=0.0013
-  [train] batch 250/786 | loss=0.0039
-  [train] batch 300/786 | loss=0.0018
-  [train] batch 350/786 | loss=0.0017
-  [train] batch 400/786 | loss=0.0027
-  [train] batch 450/786 | loss=0.0045
-  [train] batch 500/786 | loss=0.0065
-  [train] batch 550/786 | loss=0.0036
-  [train] batch 600/786 | loss=0.0049
-  [train] batch 650/786 | loss=0.0031
-  [train] batch 700/786 | loss=0.0062
-  [train] batch 750/786 | loss=0.0047
-  Validating...
-Epoch 15/30 | loss=0.0040 | val_auc=0.9543 | lr=0.000500
-
---- Epoch 16/30 ---
-  [train] batch 0/786 | loss=0.0021
-  [train] batch 50/786 | loss=0.0039
-  [train] batch 100/786 | loss=0.0043
-  [train] batch 150/786 | loss=0.0028
-  [train] batch 200/786 | loss=0.0031
-  [train] batch 250/786 | loss=0.0047
-  [train] batch 300/786 | loss=0.0062
-  [train] batch 350/786 | loss=0.0035
-  [train] batch 400/786 | loss=0.0034
-  [train] batch 450/786 | loss=0.0037
-  [train] batch 500/786 | loss=0.0027
-  [train] batch 550/786 | loss=0.0058
-  [train] batch 600/786 | loss=0.0017
-  [train] batch 650/786 | loss=0.0061
-  [train] batch 700/786 | loss=0.0051
-  [train] batch 750/786 | loss=0.0026
-  Validating...
-Epoch 16/30 | loss=0.0037 | val_auc=0.9587 | lr=0.000448
-
---- Epoch 17/30 ---
-  [train] batch 0/786 | loss=0.0015
-  [train] batch 50/786 | loss=0.0043
-  [train] batch 100/786 | loss=0.0050
-  [train] batch 150/786 | loss=0.0030
-  [train] batch 200/786 | loss=0.0017
-  [train] batch 250/786 | loss=0.0032
-  [train] batch 300/786 | loss=0.0030
-  [train] batch 350/786 | loss=0.0016
-  [train] batch 400/786 | loss=0.0031
-  [train] batch 450/786 | loss=0.0033
-  [train] batch 500/786 | loss=0.0035
-  [train] batch 550/786 | loss=0.0033
-  [train] batch 600/786 | loss=0.0019
-  [train] batch 650/786 | loss=0.0018
+  [train] batch 300/786 | loss=0.0083
+  [train] batch 350/786 | loss=0.0135
+  [train] batch 400/786 | loss=0.0108
+  [train] batch 450/786 | loss=0.0094
+  [train] batch 500/786 | loss=0.0053
+  [train] batch 550/786 | loss=0.0081
+  [train] batch 600/786 | loss=0.0083
+  [train] batch 650/786 | loss=0.0078
   [train] batch 700/786 | loss=0.0054
-  [train] batch 750/786 | loss=0.0018
+  [train] batch 750/786 | loss=0.0065
   Validating...
-Epoch 17/30 | loss=0.0033 | val_auc=0.9599 | lr=0.000396
-  -> Saved best model (AUC=0.9599)
-
---- Epoch 18/30 ---
-  [train] batch 0/786 | loss=0.0027
-  [train] batch 50/786 | loss=0.0068
-  [train] batch 100/786 | loss=0.0027
-  [train] batch 150/786 | loss=0.0010
-  [train] batch 200/786 | loss=0.0045
-  [train] batch 250/786 | loss=0.0029
-  [train] batch 300/786 | loss=0.0020
-  [train] batch 350/786 | loss=0.0025
-  [train] batch 400/786 | loss=0.0048
-  [train] batch 450/786 | loss=0.0021
-  [train] batch 500/786 | loss=0.0028
-  [train] batch 550/786 | loss=0.0021
-  [train] batch 600/786 | loss=0.0039
-  [train] batch 650/786 | loss=0.0022
-  [train] batch 700/786 | loss=0.0023
-  [train] batch 750/786 | loss=0.0013
-  Validating...
-Epoch 18/30 | loss=0.0030 | val_auc=0.9574 | lr=0.000345
-
---- Epoch 19/30 ---
-  [train] batch 0/786 | loss=0.0020
-  [train] batch 50/786 | loss=0.0022
-  [train] batch 100/786 | loss=0.0022
-  [train] batch 150/786 | loss=0.0031
-  [train] batch 200/786 | loss=0.0033
-  [train] batch 250/786 | loss=0.0008
-  [train] batch 300/786 | loss=0.0027
-  [train] batch 350/786 | loss=0.0014
-  [train] batch 400/786 | loss=0.0032
-  [train] batch 450/786 | loss=0.0028
-  [train] batch 500/786 | loss=0.0054
-  [train] batch 550/786 | loss=0.0056
-  [train] batch 600/786 | loss=0.0021
-  [train] batch 650/786 | loss=0.0027
-  [train] batch 700/786 | loss=0.0007
-  [train] batch 750/786 | loss=0.0042
-  Validating...
-Epoch 19/30 | loss=0.0028 | val_auc=0.9573 | lr=0.000297
-
---- Epoch 20/30 ---
-  [train] batch 0/786 | loss=0.0012
-  [train] batch 50/786 | loss=0.0014
-  [train] batch 100/786 | loss=0.0020
-  [train] batch 150/786 | loss=0.0011
-  [train] batch 200/786 | loss=0.0026
-  [train] batch 250/786 | loss=0.0043
-  [train] batch 300/786 | loss=0.0035
-  [train] batch 350/786 | loss=0.0023
-  [train] batch 400/786 | loss=0.0008
-  [train] batch 450/786 | loss=0.0023
-  [train] batch 500/786 | loss=0.0027
-  [train] batch 550/786 | loss=0.0024
-  [train] batch 600/786 | loss=0.0025
-  [train] batch 650/786 | loss=0.0046
-  [train] batch 700/786 | loss=0.0027
-  [train] batch 750/786 | loss=0.0017
-  Validating...
-Epoch 20/30 | loss=0.0026 | val_auc=0.9584 | lr=0.000250
-
---- Epoch 21/30 ---
-  [train] batch 0/786 | loss=0.0021
-  [train] batch 50/786 | loss=0.0038
-  [train] batch 100/786 | loss=0.0033
-  [train] batch 150/786 | loss=0.0046
-  [train] batch 200/786 | loss=0.0030
-  [train] batch 250/786 | loss=0.0034
-  [train] batch 300/786 | loss=0.0027
-  [train] batch 350/786 | loss=0.0021
-  [train] batch 400/786 | loss=0.0026
-  [train] batch 450/786 | loss=0.0009
-  [train] batch 500/786 | loss=0.0017
-  [train] batch 550/786 | loss=0.0038
-  [train] batch 600/786 | loss=0.0025
-  [train] batch 650/786 | loss=0.0032
-  [train] batch 700/786 | loss=0.0038
