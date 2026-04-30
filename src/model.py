@@ -29,10 +29,10 @@ class MelSpecTransform(nn.Module):
 class BirdBackbone(nn.Module):
     """Mel spectrogram (B, 1, n_mels, T) -> 234 logits. ONNX-exportable."""
 
-    def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True):
+    def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True, model_name=None):
         super().__init__()
         self.backbone = timm.create_model(
-            CFG.MODEL_NAME,
+            model_name or CFG.MODEL_NAME,
             pretrained=pretrained,
             in_chans=1,
             num_classes=0,
@@ -58,10 +58,10 @@ class BirdBackbone(nn.Module):
 class BirdModel(nn.Module):
     """Full training model: raw waveform -> mel -> backbone -> logits."""
 
-    def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True):
+    def __init__(self, num_classes=CFG.NUM_CLASSES, pretrained=True, model_name=None):
         super().__init__()
         self.mel_spec = MelSpecTransform()
-        self.backbone = BirdBackbone(num_classes=num_classes, pretrained=pretrained)
+        self.backbone = BirdBackbone(num_classes=num_classes, pretrained=pretrained, model_name=model_name)
 
     def forward(self, x):
         # x: (B, num_samples) raw waveform

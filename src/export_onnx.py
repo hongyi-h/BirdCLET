@@ -9,15 +9,21 @@ from src.model import BirdModel
 import os
 
 
-def export():
+def export(checkpoint=None, backbone_name=None):
     device = torch.device("cpu")
 
     # Load full model (mel_spec + backbone)
-    full_model = BirdModel(pretrained=False).to(device)
-    # Try v2 checkpoint first, fall back to v1
-    ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, "best_v2.pt")
-    if not os.path.exists(ckpt_path):
-        ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, "best.pt")
+    full_model = BirdModel(pretrained=False, model_name=backbone_name).to(device)
+
+    # Checkpoint priority: arg > best_v3 > best_v2 > best
+    if checkpoint:
+        ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, checkpoint)
+    else:
+        for name in ["best_v3.pt", "best_v2.pt", "best.pt"]:
+            ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, name)
+            if os.path.exists(ckpt_path):
+                break
+
     full_model.load_state_dict(torch.load(ckpt_path, map_location=device))
     full_model.eval()
     print(f"Loaded checkpoint: {ckpt_path}")
@@ -60,4 +66,10 @@ def export():
 
 
 if __name__ == "__main__":
-    export()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoint", type=str, default=None)
+    parser.add_argument("--backbone", type=str, default=None,
+                        help="e.g. tf_efficientnetv2_s.in21k_ft_in1k")
+    args = parser.parse_args()
+    export(checkpoint=args.checkpoint, backbone_name=args.backbone)
