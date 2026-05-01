@@ -1,3 +1,4 @@
+(birdclef) root@pt-caf0af288db34325b56284b19fe88d7f-worker-0:/mnt/afs/zhengmingkai/hhy/BirdCLET# python -m src.train --backbone v2s --epochs 40 --batch_size 48 --lr 2e-4 --num_workers 4
 Device: cuda
 [split] Reduced n_splits to 2 (min class count = 2)
 [split] 4 singleton sample(s) kept train-only: ['116570', '23150', '23724', '516975']
