@@ -98,6 +98,7 @@ def check_precomputed_subset(name, errors, required=True):
     require({"mel_path", "target_path", "labels", "domain"}.issubset(manifest.columns),
             f"precomputed/{name} manifest missing required columns", errors)
     missing = 0
+    bad_mels = 0
     bad_targets = 0
     for _, row in manifest.head(2000).iterrows():
         mel_path = str(row["mel_path"])
@@ -109,13 +110,50 @@ def check_precomputed_subset(name, errors, required=True):
         if not os.path.exists(mel_path) or not os.path.exists(target_path):
             missing += 1
             continue
+        mel = np.load(mel_path)
         target = np.load(target_path)
+        if len(mel.shape) != 2 or mel.shape[0] != CFG.N_MELS:
+            bad_mels += 1
         if target.shape != (CFG.NUM_CLASSES,):
             bad_targets += 1
 
     require(missing == 0, f"precomputed/{name}: missing files in manifest sample: {missing}", errors)
+    require(bad_mels == 0, f"precomputed/{name}: bad mel shape in manifest sample: {bad_mels}", errors)
     require(bad_targets == 0, f"precomputed/{name}: bad target shape in manifest sample: {bad_targets}", errors)
     print(f"precomputed/{name}: {len(manifest)} rows")
+
+
+def check_unlabeled_precomputed(errors):
+    subset_dir = os.path.join(CFG.PRECOMPUTED_DIR, "soundscape_unlabeled")
+    if not os.path.isdir(subset_dir):
+        errors.append("precomputed/soundscape_unlabeled is missing")
+        print("precomputed/soundscape_unlabeled: missing")
+        return
+
+    manifest_path = os.path.join(subset_dir, "manifest.csv")
+    require(os.path.exists(manifest_path), "precomputed/soundscape_unlabeled missing manifest.csv", errors)
+    if not os.path.exists(manifest_path):
+        return
+
+    manifest = pd.read_csv(manifest_path)
+    require({"mel_path", "filename", "start", "site"}.issubset(manifest.columns),
+            "precomputed/soundscape_unlabeled manifest missing required columns", errors)
+    missing = 0
+    bad_mels = 0
+    for _, row in manifest.head(2000).iterrows():
+        mel_path = str(row["mel_path"])
+        if not os.path.isabs(mel_path):
+            mel_path = os.path.join(subset_dir, mel_path)
+        if not os.path.exists(mel_path):
+            missing += 1
+            continue
+        mel = np.load(mel_path)
+        if len(mel.shape) != 2 or mel.shape[0] != CFG.N_MELS:
+            bad_mels += 1
+
+    require(missing == 0, f"precomputed/soundscape_unlabeled: missing mel files in manifest sample: {missing}", errors)
+    require(bad_mels == 0, f"precomputed/soundscape_unlabeled: bad mel shape in manifest sample: {bad_mels}", errors)
+    print(f"precomputed/soundscape_unlabeled: {len(manifest)} rows")
 
 
 def check_specialist_mapping(model_dir, errors):
@@ -169,6 +207,7 @@ def main():
     if args.check_precomputed:
         check_precomputed_subset("focal", errors, required=True)
         check_precomputed_subset("soundscape_labeled", errors, required=True)
+        check_unlabeled_precomputed(errors)
         check_precomputed_subset("pseudo", errors, required=False)
     if args.check_models:
         check_specialist_mapping(args.model_dir, errors)
