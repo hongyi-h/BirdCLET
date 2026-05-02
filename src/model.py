@@ -63,7 +63,10 @@ class BirdModel(nn.Module):
         self.mel_spec = MelSpecTransform()
         self.backbone = BirdBackbone(num_classes=num_classes, pretrained=pretrained, model_name=model_name)
 
-    def forward(self, x):
+    def forward(self, x, precomputed=False):
+        if precomputed:
+            # x: (B, 1, n_mels, T) mel spectrogram already computed
+            return self.backbone(x)
         # x: (B, num_samples) raw waveform
         x = self.mel_spec(x)  # (B, n_mels, T)
         x = x.unsqueeze(1)    # (B, 1, n_mels, T)

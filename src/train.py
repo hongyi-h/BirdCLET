@@ -1,25 +1,25 @@
-"""Training v3: Domain-adaptive training for BirdCLEF 2026.
+"""Training v4: DDP + precomputed mels + iterative Noisy Student.
 
-Key changes from v1/v2:
-1. Soundscape-first validation (grouped by site, class-wise macro AUC)
-2. Soundscape-only species handled via soundscape segment training
-3. Aggressive background mixing (focal onto soundscape backgrounds)
-4. Pseudo-label integration with confidence filtering
-5. Class-balanced sampling with taxon-aware quotas
-6. Upgraded backbone option (EfficientNetV2-S)
-7. Focal loss for better rare-class handling
+Launch (8-GPU):
+    torchrun --standalone --nproc_per_node=8 -m src.train --backbone v2s --epochs 40
 
-Usage:
-    python -m src.train [--backbone b0|v2s] [--pseudo] [--epochs 40]
+Single GPU fallback:
+    python -m src.train --backbone v2s --epochs 40
 """
 import os
+import datetime
 import argparse
 import random
+import glob
+import math
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+import torch.distributed as dist
+import torch.multiprocessing as mp
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler, Sampler
 from sklearn.metrics import roc_auc_score
 import soundfile as sf
 
@@ -30,37 +30,81 @@ from src.augment import SpecAugment, gain_augment, time_shift
 
 
 # ============================================================
-# Config
+# Args
 # ============================================================
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backbone", default="v2s", choices=["b0", "v2s"])
+    parser.add_argument("--backbone", default="v2s", choices=list(CFG.BACKBONE_REGISTRY.keys()))
     parser.add_argument("--pseudo", action="store_true", help="Use pseudo-labels")
+    parser.add_argument("--pseudo_round", type=int, default=0, help="Pseudo-label round (0=none)")
     parser.add_argument("--epochs", type=int, default=40)
-    parser.add_argument("--batch_size", type=int, default=48)
-    parser.add_argument("--lr", type=float, default=2e-4)
-    parser.add_argument("--soundscape_ratio", type=float, default=0.4,
-                        help="Fraction of each batch from soundscape domain")
+    parser.add_argument("--batch_size", type=int, default=128, help="Per-GPU batch size")
+    parser.add_argument("--lr", type=float, default=3e-4)
+    parser.add_argument("--soundscape_ratio", type=float, default=0.4)
     parser.add_argument("--mixup_prob", type=float, default=0.5)
     parser.add_argument("--bg_mix_prob", type=float, default=0.6)
     parser.add_argument("--label_smoothing", type=float, default=0.02)
     parser.add_argument("--focal_gamma", type=float, default=2.0)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--precomputed", action="store_true", help="Use precomputed mel spectrograms")
+    parser.add_argument("--save_tag", type=str, default="v4", help="Checkpoint name tag")
     return parser.parse_args()
-
-
-BACKBONE_MAP = {
-    "b0": "tf_efficientnet_b0.ns_jft_in1k",
-    "v2s": "tf_efficientnetv2_s.in21k_ft_in1k",
-}
 
 
 def set_seed(seed=CFG.SEED):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+# ============================================================
+# DDP helpers
+# ============================================================
+def setup_ddp():
+    """Initialize DDP if launched via torchrun. Returns (rank, world_size, device)."""
+    if "RANK" not in os.environ:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        return 0, 1, device
+
+    rank = int(os.environ["RANK"])
+    local_rank = int(os.environ["LOCAL_RANK"])
+    world_size = int(os.environ["WORLD_SIZE"])
+
+    # MetaX MUSA: try mccl, fall back to nccl, then gloo
+    for backend in ["mccl", "nccl", "gloo"]:
+        try:
+            if dist.is_backend_available(backend):
+                dist.init_process_group(
+                    backend=backend,
+                    init_method="env://",
+                    timeout=datetime.timedelta(minutes=30),
+                )
+                break
+        except Exception:
+            continue
+    else:
+        dist.init_process_group(backend="gloo", init_method="env://",
+                                timeout=datetime.timedelta(minutes=30))
+
+    torch.cuda.set_device(local_rank)
+    device = torch.device("cuda", local_rank)
+
+    if rank == 0:
+        print(f"DDP initialized: world_size={world_size}, backend={dist.get_backend()}")
+
+    return rank, world_size, device
+
+
+def cleanup_ddp():
+    if dist.is_initialized():
+        dist.destroy_process_group()
+
+
+def is_main(rank):
+    return rank == 0
 
 
 # ============================================================
@@ -75,7 +119,6 @@ class FocalBCELoss(nn.Module):
     def forward(self, logits, targets):
         if self.label_smoothing > 0:
             targets = targets * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
-
         bce = nn.functional.binary_cross_entropy_with_logits(logits, targets, reduction='none')
         p = torch.sigmoid(logits)
         pt = targets * p + (1 - targets) * (1 - p)
@@ -84,11 +127,29 @@ class FocalBCELoss(nn.Module):
 
 
 # ============================================================
-# Dataset
+# Precomputed Dataset (fast: loads .npy)
+# ============================================================
+class PrecomputedDataset(Dataset):
+    """Loads precomputed mel spectrograms from manifest records."""
+
+    def __init__(self, records, training=True):
+        self.records = records
+        self.training = training
+
+    def __len__(self):
+        return len(self.records)
+
+    def __getitem__(self, idx):
+        record = self.records[idx]
+        mel = np.load(record["mel_path"]).astype(np.float32)  # (n_mels, T)
+        target = np.load(record["target_path"]).astype(np.float32)  # (NUM_CLASSES,)
+        return torch.from_numpy(mel), torch.from_numpy(target)
+
+
+# ============================================================
+# Waveform Dataset (flexible: supports augmentation)
 # ============================================================
 class UnifiedDataset(Dataset):
-    """Handles focal, soundscape, and pseudo-labeled data with domain-aware augmentation."""
-
     def __init__(self, entries, label_map, bg_pool=None, training=True,
                  mixup_prob=0.5, bg_mix_prob=0.6):
         self.entries = entries
@@ -113,7 +174,6 @@ class UnifiedDataset(Dataset):
             if random.random() < 0.5:
                 audio = time_shift(audio, max_shift_sec=1.5)
 
-            # Additive mixup with another sample
             if random.random() < self.mixup_prob:
                 idx2 = random.randint(0, len(self.entries) - 1)
                 audio2 = self._load_audio(self.entries[idx2])
@@ -122,8 +182,6 @@ class UnifiedDataset(Dataset):
                 lam = np.random.beta(0.5, 0.5)
                 audio = lam * audio + (1 - lam) * audio2
                 target = np.maximum(target, target2)
-
-            # Background mixing with soundscape (domain adaptation)
             elif self.bg_pool and random.random() < self.bg_mix_prob:
                 bg_entry = random.choice(self.bg_pool)
                 bg_audio = self._load_audio(bg_entry)
@@ -133,7 +191,6 @@ class UnifiedDataset(Dataset):
                 if "target" in bg_entry:
                     target = np.maximum(target, bg_entry["target"])
 
-        # Normalize amplitude
         peak = np.abs(audio).max()
         if peak > 0:
             audio = audio / peak
@@ -143,7 +200,6 @@ class UnifiedDataset(Dataset):
     def _load_audio(self, entry):
         path = entry["path"]
         offset = entry.get("offset_sec", 0.0)
-
         try:
             info = sf.info(path)
             file_sr = info.samplerate
@@ -155,7 +211,6 @@ class UnifiedDataset(Dataset):
 
         if len(audio.shape) > 1:
             audio = audio.mean(axis=1)
-
         if len(audio) < self.num_samples:
             audio = np.pad(audio, (0, self.num_samples - len(audio)))
         elif len(audio) > self.num_samples:
@@ -164,22 +219,37 @@ class UnifiedDataset(Dataset):
             else:
                 start = 0
             audio = audio[start:start + self.num_samples]
-
         return audio
 
 
 # ============================================================
 # Data preparation
 # ============================================================
+def split_label_string(value):
+    return [label.strip() for label in str(value).split(";") if label.strip()]
+
+
+def site_from_filename(filename):
+    parts = os.path.basename(str(filename)).split("_")
+    return parts[3] if len(parts) > 3 else "unknown"
+
+
+def entry_labels(entry):
+    labels = entry.get("labels")
+    if labels:
+        return [str(label) for label in labels]
+    return [str(entry["primary_label"])]
+
+
 def build_focal_entries(df, label_map):
     entries = []
     for _, row in df.iterrows():
         path = os.path.join(CFG.TRAIN_AUDIO_DIR, row["filename"])
         target = np.zeros(CFG.NUM_CLASSES, dtype=np.float32)
         label = str(row["primary_label"])
+        labels = [label]
         if label in label_map:
             target[label_map[label]] = 1.0
-        # Secondary labels at reduced weight
         if pd.notna(row.get("secondary_labels")) and str(row["secondary_labels"]) not in ("[]", ""):
             try:
                 sec_labels = eval(row["secondary_labels"]) if isinstance(row["secondary_labels"], str) else []
@@ -191,7 +261,7 @@ def build_focal_entries(df, label_map):
                 pass
         entries.append({
             "path": path, "offset_sec": 0.0, "target": target,
-            "primary_label": label, "domain": "focal"
+            "primary_label": label, "labels": labels, "domain": "focal", "site": "focal",
         })
     return entries
 
@@ -202,62 +272,59 @@ def build_soundscape_entries(df, label_map):
         path = os.path.join(CFG.TRAIN_SOUNDSCAPES_DIR, row["filename"])
         parts = str(row["start"]).split(":")
         offset_sec = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-
         target = np.zeros(CFG.NUM_CLASSES, dtype=np.float32)
-        for label in str(row["primary_label"]).split(";"):
-            label = label.strip()
+        labels = split_label_string(row["primary_label"])
+        for label in labels:
             if label in label_map:
                 target[label_map[label]] = 1.0
-
         entries.append({
             "path": path, "offset_sec": offset_sec, "target": target,
-            "primary_label": str(row["primary_label"]).split(";")[0], "domain": "soundscape"
+            "primary_label": labels[0] if labels else "unknown",
+            "labels": labels,
+            "domain": "soundscape",
+            "site": site_from_filename(row["filename"]),
         })
     return entries
 
 
 def build_pseudo_entries(pseudo_df, label_map, confidence_threshold=0.6):
-    """Build entries from pseudo-labels with confidence filtering."""
     species_list = sorted(label_map.keys())
     entries = []
     for _, row in pseudo_df.iterrows():
         if row.get("max_prob", 1.0) < confidence_threshold:
             continue
-
         path = os.path.join(CFG.TRAIN_SOUNDSCAPES_DIR, row["filename"])
         parts = str(row["start"]).split(":")
         offset_sec = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-
         target = np.zeros(CFG.NUM_CLASSES, dtype=np.float32)
+        labels = []
         for k, sp in enumerate(species_list):
             if sp in row and row[sp] > 0.2:
                 target[k] = float(min(row[sp], 1.0))
-
+                labels.append(sp)
         if target.max() < 0.3:
             continue
-
         primary = species_list[target.argmax()]
         entries.append({
             "path": path, "offset_sec": offset_sec, "target": target,
-            "primary_label": primary, "domain": "pseudo"
+            "primary_label": primary,
+            "labels": labels or [primary],
+            "domain": "pseudo",
+            "site": site_from_filename(row["filename"]),
         })
     return entries
 
 
 def build_background_pool(soundscape_dir):
-    """Build pool of random soundscape segments for background mixing."""
-    import glob
     files = sorted(glob.glob(os.path.join(soundscape_dir, "*.ogg")))
     pool = []
     for f in files:
         try:
             info = sf.info(f)
-            duration = info.duration
-            n_segments = int(duration // CFG.DURATION)
+            n_segments = int(info.duration // CFG.DURATION)
             for i in range(n_segments):
                 pool.append({
-                    "path": f,
-                    "offset_sec": i * CFG.DURATION,
+                    "path": f, "offset_sec": i * CFG.DURATION,
                     "target": np.zeros(CFG.NUM_CLASSES, dtype=np.float32),
                 })
         except Exception:
@@ -265,73 +332,225 @@ def build_background_pool(soundscape_dir):
     return pool
 
 
+def build_precomputed_paths(subset_dir):
+    """Collect paired (mel, target) .npy paths from a precomputed directory."""
+    mel_files = sorted(glob.glob(os.path.join(subset_dir, "*_mel.npy")))
+    mel_paths, target_paths = [], []
+    for mf in mel_files:
+        tf = mf.replace("_mel.npy", "_target.npy")
+        if os.path.exists(tf):
+            mel_paths.append(mf)
+            target_paths.append(tf)
+    return mel_paths, target_paths
+
+
+def resolve_precomputed_path(subset_dir, value):
+    path = str(value)
+    if os.path.isabs(path):
+        return path
+    return os.path.join(subset_dir, path)
+
+
+def labels_from_target_path(target_path, species_list, threshold=0.2):
+    target = np.load(target_path)
+    return [species_list[i] for i, value in enumerate(target) if value > threshold]
+
+
+def build_precomputed_records(subset_dir, domain, label_map):
+    """Collect precomputed mel/target pairs with domain, labels, and site metadata."""
+    species_list = sorted(label_map.keys())
+    manifest_path = os.path.join(subset_dir, "manifest.csv")
+    records = []
+
+    if os.path.exists(manifest_path):
+        manifest = pd.read_csv(manifest_path)
+        for _, row in manifest.iterrows():
+            mel_value = row.get("mel_path", "")
+            target_value = row.get("target_path", "")
+            if pd.isna(mel_value) or pd.isna(target_value) or not str(mel_value) or not str(target_value):
+                stem = str(row.get("stem", row.get("name", "")))
+                mel_value = f"{stem}_mel.npy"
+                target_value = f"{stem}_target.npy"
+
+            mel_path = resolve_precomputed_path(subset_dir, mel_value)
+            target_path = resolve_precomputed_path(subset_dir, target_value)
+            if not os.path.exists(mel_path) or not os.path.exists(target_path):
+                continue
+
+            labels_value = row.get("labels", row.get("primary_label", ""))
+            if pd.isna(labels_value):
+                labels_value = ""
+            labels = split_label_string(labels_value)
+            if not labels:
+                labels = labels_from_target_path(target_path, species_list)
+            primary = str(row.get("primary_label", labels[0] if labels else "unknown"))
+            if primary == "nan":
+                primary = labels[0] if labels else "unknown"
+            if ";" in primary:
+                primary = split_label_string(primary)[0]
+            filename = row.get("filename", "")
+            if pd.isna(filename):
+                filename = ""
+            site = row.get("site", site_from_filename(filename) if filename else domain)
+            if pd.isna(site):
+                site = site_from_filename(filename) if filename else domain
+            record_domain = row.get("domain", domain)
+            if pd.isna(record_domain):
+                record_domain = domain
+
+            records.append({
+                "mel_path": mel_path,
+                "target_path": target_path,
+                "primary_label": primary,
+                "labels": labels or [primary],
+                "domain": str(record_domain),
+                "site": str(site),
+            })
+        return records
+
+    mel_paths, target_paths = build_precomputed_paths(subset_dir)
+    if not mel_paths:
+        return records
+
+    train_df = None
+    soundscape_df = None
+    if domain == "focal":
+        train_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train.csv"))
+        train_df["primary_label"] = train_df["primary_label"].astype(str)
+    elif domain == "soundscape":
+        soundscape_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train_soundscapes_labels.csv"))
+
+    for mel_path, target_path in zip(mel_paths, target_paths):
+        stem = os.path.basename(mel_path).replace("_mel.npy", "")
+        labels = []
+        primary = "unknown"
+        site = domain
+
+        try:
+            if domain == "focal" and train_df is not None:
+                source_idx = int(stem.split("_")[1])
+                row = train_df.iloc[source_idx]
+                primary = str(row["primary_label"])
+                labels = [primary]
+                site = "focal"
+            elif domain == "soundscape" and soundscape_df is not None:
+                source_idx = int(stem.split("_")[1])
+                row = soundscape_df.iloc[source_idx]
+                labels = split_label_string(row["primary_label"])
+                primary = labels[0] if labels else "unknown"
+                site = site_from_filename(row["filename"])
+            else:
+                labels = labels_from_target_path(target_path, species_list)
+                primary = labels[0] if labels else "unknown"
+        except Exception:
+            labels = labels_from_target_path(target_path, species_list)
+            primary = labels[0] if labels else "unknown"
+
+        records.append({
+            "mel_path": mel_path,
+            "target_path": target_path,
+            "primary_label": primary,
+            "labels": labels or [primary],
+            "domain": domain,
+            "site": site,
+        })
+
+    return records
+
+
 # ============================================================
-# Validation split: by soundscape site
+# Validation split by site
 # ============================================================
 def split_soundscape_by_site(entries, val_ratio=0.3):
-    """Split soundscape entries by recording site for proper validation."""
     sites = {}
     for e in entries:
-        fname = os.path.basename(e["path"])
-        # Format: BC2026_Train_XXXX_SYY_...
-        parts = fname.split("_")
-        site = parts[3] if len(parts) > 3 else "unknown"
+        site = e.get("site")
+        if not site:
+            fname = os.path.basename(e.get("path", ""))
+            site = site_from_filename(fname)
         sites.setdefault(site, []).append(e)
 
     site_list = sorted(sites.keys())
     random.shuffle(site_list)
-
     val_count = max(1, int(len(site_list) * val_ratio))
     val_sites = set(site_list[:val_count])
 
-    train_entries = []
-    val_entries = []
-    for site, site_entries in sites.items():
-        if site in val_sites:
-            val_entries.extend(site_entries)
-        else:
-            train_entries.extend(site_entries)
-
+    train_entries, val_entries = [], []
+    for site, se in sites.items():
+        (val_entries if site in val_sites else train_entries).extend(se)
     return train_entries, val_entries, val_sites
 
 
 # ============================================================
-# Class-balanced sampler with taxon awareness
+# Balanced sampler
 # ============================================================
-def build_balanced_sampler(entries, num_samples_per_epoch):
-    """Inverse-sqrt frequency weighting, boosted for soundscape-only species."""
+def build_sample_weights(entries):
     label_counts = {}
     for e in entries:
-        pl = e["primary_label"]
-        label_counts[pl] = label_counts.get(pl, 0) + 1
+        for label in entry_labels(e):
+            label_counts[label] = label_counts.get(label, 0) + 1
 
-    # Identify soundscape-only species (boost their weight)
-    soundscape_only = set()
-    focal_species = set(e["primary_label"] for e in entries if e["domain"] == "focal")
+    focal_species = set()
     for e in entries:
-        if e["primary_label"] not in focal_species:
-            soundscape_only.add(e["primary_label"])
+        if e["domain"] == "focal":
+            focal_species.update(entry_labels(e))
 
     weights = []
     for e in entries:
-        pl = e["primary_label"]
-        w = 1.0 / (label_counts[pl] ** 0.5)
-        # Boost soundscape-domain entries
+        labels = entry_labels(e)
+        w = max(1.0 / (label_counts[label] ** 0.5) for label in labels if label in label_counts)
         if e["domain"] in ("soundscape", "pseudo"):
             w *= 3.0
-        # Extra boost for soundscape-only species
-        if pl in soundscape_only:
+        if any(label not in focal_species for label in labels):
             w *= 2.0
         weights.append(w)
 
+    return weights
+
+
+def build_balanced_sampler(entries, num_samples_per_epoch):
+    weights = build_sample_weights(entries)
     return WeightedRandomSampler(weights, num_samples=num_samples_per_epoch, replacement=True)
+
+
+class WeightedDistributedSampler(Sampler):
+    """Replacement sampler that preserves class/domain weights under DDP."""
+
+    def __init__(self, weights, num_samples, num_replicas=None, rank=None,
+                 replacement=True, seed=CFG.SEED):
+        if num_replicas is None:
+            num_replicas = dist.get_world_size() if dist.is_initialized() else 1
+        if rank is None:
+            rank = dist.get_rank() if dist.is_initialized() else 0
+        self.weights = torch.as_tensor(weights, dtype=torch.double)
+        self.num_replicas = num_replicas
+        self.rank = rank
+        self.replacement = replacement
+        self.seed = seed
+        self.epoch = 0
+        self.num_samples = int(math.ceil(num_samples / self.num_replicas))
+        self.total_size = self.num_samples * self.num_replicas
+
+    def __iter__(self):
+        generator = torch.Generator()
+        generator.manual_seed(self.seed + self.epoch)
+        indices = torch.multinomial(
+            self.weights, self.total_size, self.replacement, generator=generator
+        ).tolist()
+        indices = indices[self.rank:self.total_size:self.num_replicas]
+        return iter(indices)
+
+    def __len__(self):
+        return self.num_samples
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
 
 
 # ============================================================
 # Metrics
 # ============================================================
 def compute_classwise_macro_auc(targets, preds):
-    """Class-wise macro AUC (competition metric)."""
     aucs = []
     per_class = {}
     for i in range(targets.shape[1]):
@@ -341,29 +560,45 @@ def compute_classwise_macro_auc(targets, preds):
                 aucs.append(auc)
                 per_class[i] = auc
             except ValueError:
-                pass
+                    pass
     return np.mean(aucs) if aucs else 0.0, per_class
 
 
+def summarize_entries(entries, label_map):
+    domain_counts = {}
+    label_set = set()
+    for entry in entries:
+        domain = entry.get("domain", "unknown")
+        domain_counts[domain] = domain_counts.get(domain, 0) + 1
+        label_set.update(label for label in entry_labels(entry) if label in label_map)
+    return domain_counts, label_set
+
+
 # ============================================================
-# Training
+# Training loop
 # ============================================================
-def train_one_epoch(model, loader, optimizer, criterion, device, spec_aug, scaler=None):
+def train_one_epoch(model, loader, optimizer, criterion, device, spec_aug, scaler=None,
+                    mel_transform=None, precomputed=False):
     model.train()
     losses = []
-    mel_transform = model.mel_spec
     total = len(loader)
 
-    for i, (audio, targets) in enumerate(loader):
-        audio, targets = audio.to(device), targets.to(device)
+    for i, (data, targets) in enumerate(loader):
+        data, targets = data.to(device), targets.to(device)
         optimizer.zero_grad()
 
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
-            with torch.no_grad():
-                mel = mel_transform(audio)
+        with torch.amp.autocast("cuda", enabled=scaler is not None):
+            if precomputed:
+                mel = data
+            else:
+                with torch.no_grad():
+                    mel = mel_transform(data)
+
             mel = spec_aug(mel)
-            mel = mel.unsqueeze(1)
-            logits = model.backbone(mel)
+            mel = mel.unsqueeze(1)  # (B, 1, n_mels, T)
+
+            # Forward through DDP wrapper to preserve gradient sync
+            logits = model(mel, precomputed=True)
             loss = criterion(logits, targets)
 
         if scaler is not None:
@@ -378,20 +613,26 @@ def train_one_epoch(model, loader, optimizer, criterion, device, spec_aug, scale
             optimizer.step()
 
         losses.append(loss.item())
-        if i % 100 == 0:
+        if i % 100 == 0 and (not dist.is_initialized() or dist.get_rank() == 0):
             print(f"  [train] batch {i}/{total} | loss={loss.item():.4f}", flush=True)
 
     return np.mean(losses)
 
 
 @torch.no_grad()
-def validate(model, loader, device):
+def validate(model, loader, device, precomputed=False):
     model.eval()
+    raw_model = model.module if hasattr(model, "module") else model
+    mel_transform = raw_model.mel_spec
     all_preds, all_targets = [], []
 
-    for audio, targets in loader:
-        audio = audio.to(device)
-        logits = model(audio)
+    for data, targets in loader:
+        data = data.to(device)
+        if precomputed:
+            mel = data.unsqueeze(1)
+            logits = raw_model(mel, precomputed=True)
+        else:
+            logits = raw_model(data)
         preds = torch.sigmoid(logits).cpu().numpy()
         all_preds.append(preds)
         all_targets.append(targets.numpy())
@@ -409,130 +650,224 @@ def main():
     args = parse_args()
     set_seed()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
-    print(f"Config: backbone={args.backbone}, epochs={args.epochs}, bs={args.batch_size}, "
-          f"lr={args.lr}, pseudo={args.pseudo}")
+    rank, world_size, device = setup_ddp()
+
+    if is_main(rank):
+        print(f"Device: {device} | World size: {world_size}")
+        print(f"Config: backbone={args.backbone}, epochs={args.epochs}, "
+              f"bs={args.batch_size}x{world_size}={args.batch_size*world_size}, "
+              f"lr={args.lr}, pseudo={args.pseudo}, precomputed={args.precomputed}")
 
     label_map = build_label_map()
     species_list = sorted(label_map.keys())
+    model_name = CFG.BACKBONE_REGISTRY[args.backbone]
 
-    # --- Load data ---
-    train_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train.csv"))
-    train_df["primary_label"] = train_df["primary_label"].astype(str)
-    focal_entries = build_focal_entries(train_df, label_map)
-    print(f"Focal entries: {len(focal_entries)}")
+    # --- Build datasets ---
+    if args.precomputed:
+        focal_records = build_precomputed_records(
+            os.path.join(CFG.PRECOMPUTED_DIR, "focal"), "focal", label_map)
+        soundscape_records = build_precomputed_records(
+            os.path.join(CFG.PRECOMPUTED_DIR, "soundscape_labeled"), "soundscape", label_map)
 
-    sl_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train_soundscapes_labels.csv"))
-    soundscape_entries = build_soundscape_entries(sl_df, label_map)
-    print(f"Soundscape entries: {len(soundscape_entries)}")
+        if is_main(rank):
+            print(f"Precomputed focal: {len(focal_records)}, soundscape: {len(soundscape_records)}")
 
-    pseudo_entries = []
-    if args.pseudo:
-        pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
-        if os.path.exists(pseudo_path):
-            pseudo_df = pd.read_csv(pseudo_path)
-            pseudo_entries = build_pseudo_entries(pseudo_df, label_map)
-            print(f"Pseudo-label entries: {len(pseudo_entries)}")
-        else:
-            print("WARNING: --pseudo specified but no pseudo_labels.csv found")
+        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_records, val_ratio=0.3)
 
-    # --- Validation: soundscape-based, split by site ---
-    sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_entries, val_ratio=0.3)
-    print(f"Soundscape train: {len(sc_train)}, val: {len(sc_val)} (sites: {val_sites})")
+        # Oversample soundscape
+        sc_oversample = max(1, len(focal_records) // (3 * max(len(sc_train), 1)))
+        all_train = focal_records + sc_train * sc_oversample
 
-    # --- Background pool for mixing ---
-    bg_pool = build_background_pool(CFG.TRAIN_SOUNDSCAPES_DIR)
-    print(f"Background pool: {len(bg_pool)} segments")
+        if args.pseudo:
+            pseudo_dir = os.path.join(CFG.PRECOMPUTED_DIR, "pseudo")
+            if os.path.isdir(pseudo_dir):
+                pseudo_records = build_precomputed_records(pseudo_dir, "pseudo", label_map)
+                all_train += pseudo_records
+                if is_main(rank):
+                    print(f"Pseudo precomputed: {len(pseudo_records)}")
+            elif is_main(rank):
+                print("WARNING: --pseudo set but data/precomputed/pseudo is missing. "
+                      "Run: python -m src.preprocess --mode pseudo")
 
-    # --- Combine training data ---
-    # Oversample soundscape entries to balance with focal
-    sc_oversample = max(1, len(focal_entries) // (3 * max(len(sc_train), 1)))
-    all_train = focal_entries + sc_train * sc_oversample + pseudo_entries
-    print(f"Total training entries: {len(all_train)} "
-          f"(focal={len(focal_entries)}, sc={len(sc_train)}x{sc_oversample}, pseudo={len(pseudo_entries)})")
+        train_ds = PrecomputedDataset(all_train, training=True)
+        val_ds = PrecomputedDataset(sc_val, training=False)
 
-    # --- Datasets ---
-    train_ds = UnifiedDataset(all_train, label_map, bg_pool=bg_pool, training=True,
-                              mixup_prob=args.mixup_prob, bg_mix_prob=args.bg_mix_prob)
-    val_ds = UnifiedDataset(sc_val, label_map, training=False)
+        if is_main(rank):
+            train_domains, train_labels = summarize_entries(all_train, label_map)
+            _, val_labels = summarize_entries(sc_val, label_map)
+            print(f"SC train: {len(sc_train)}, SC val: {len(sc_val)} (sites: {val_sites})")
+            print(f"Total train: {len(train_ds)}, val: {len(val_ds)}")
+            print(f"Train domains: {train_domains}")
+            print(f"Train species: {len(train_labels)}, val evaluable species upper bound: {len(val_labels)}")
 
-    # --- Sampler ---
-    sampler = build_balanced_sampler(all_train, num_samples_per_epoch=len(all_train))
+    else:
+        # Waveform-based pipeline (original)
+        train_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train.csv"))
+        train_df["primary_label"] = train_df["primary_label"].astype(str)
+        focal_entries = build_focal_entries(train_df, label_map)
 
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler,
-                              num_workers=args.num_workers, pin_memory=True, drop_last=True)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
-                            num_workers=args.num_workers, pin_memory=True)
+        sl_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train_soundscapes_labels.csv"))
+        soundscape_entries = build_soundscape_entries(sl_df, label_map)
+
+        pseudo_entries = []
+        if args.pseudo:
+            pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
+            if os.path.exists(pseudo_path):
+                pseudo_df = pd.read_csv(pseudo_path)
+                pseudo_entries = build_pseudo_entries(pseudo_df, label_map)
+                if is_main(rank):
+                    print(f"Pseudo-label entries: {len(pseudo_entries)}")
+
+        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_entries, val_ratio=0.3)
+        if is_main(rank):
+            print(f"Focal: {len(focal_entries)}, SC train: {len(sc_train)}, "
+                  f"SC val: {len(sc_val)} (sites: {val_sites})")
+
+        bg_pool = build_background_pool(CFG.TRAIN_SOUNDSCAPES_DIR)
+
+        sc_oversample = max(1, len(focal_entries) // (3 * max(len(sc_train), 1)))
+        all_train = focal_entries + sc_train * sc_oversample + pseudo_entries
+
+        train_ds = UnifiedDataset(all_train, label_map, bg_pool=bg_pool, training=True,
+                                  mixup_prob=args.mixup_prob, bg_mix_prob=args.bg_mix_prob)
+        val_ds = UnifiedDataset(sc_val, label_map, training=False)
+
+        if is_main(rank):
+            train_domains, train_labels = summarize_entries(all_train, label_map)
+            _, val_labels = summarize_entries(sc_val, label_map)
+            print(f"Total train: {len(train_ds)}, val: {len(val_ds)}")
+            print(f"Train domains: {train_domains}")
+            print(f"Train species: {len(train_labels)}, val evaluable species upper bound: {len(val_labels)}")
+
+    # --- DataLoaders ---
+    mp_ctx = mp.get_context("spawn")
+
+    if len(train_ds) == 0:
+        raise RuntimeError("Training dataset is empty. Check audio/precomputed paths on the server.")
+    if len(val_ds) == 0:
+        raise RuntimeError("Soundscape validation dataset is empty. Check train_soundscapes_labels/precomputed manifests.")
+
+    train_weights = build_sample_weights(all_train)
+    if world_size > 1:
+        train_sampler = WeightedDistributedSampler(
+            train_weights, num_samples=len(all_train),
+            num_replicas=world_size, rank=rank, seed=CFG.SEED,
+        )
+    else:
+        train_sampler = WeightedRandomSampler(
+            train_weights, num_samples=len(all_train), replacement=True
+        )
+    val_sampler = None
+
+    loader_common = {
+        "num_workers": args.num_workers,
+        "pin_memory": True,
+    }
+    if args.num_workers > 0:
+        loader_common.update({
+            "multiprocessing_context": mp_ctx,
+            "persistent_workers": True,
+            "prefetch_factor": 4,
+        })
+
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size,
+        sampler=train_sampler, shuffle=False, drop_last=True,
+        **loader_common,
+    )
+    val_loader = DataLoader(
+        val_ds, batch_size=args.batch_size,
+        sampler=val_sampler, shuffle=False,
+        **loader_common,
+    )
 
     # --- Model ---
-    model_name = BACKBONE_MAP[args.backbone]
-    print(f"Loading model: {model_name}")
+    if is_main(rank):
+        print(f"Loading model: {model_name}")
     model = BirdModel(pretrained=True, model_name=model_name).to(device)
 
     if args.resume:
-        state = torch.load(args.resume, map_location=device)
-        matched, total = 0, 0
-        for k in state:
-            total += 1
-            if k in model.state_dict() and state[k].shape == model.state_dict()[k].shape:
-                matched += 1
+        ckpt_path = args.resume if os.path.isabs(args.resume) else os.path.join(CFG.CHECKPOINT_DIR, args.resume)
+        state = torch.load(ckpt_path, map_location=device)
         model.load_state_dict(state, strict=False)
-        print(f"Resumed from {args.resume} ({matched}/{total} params matched)")
+        if is_main(rank):
+            print(f"Resumed from {ckpt_path}")
+
+    if world_size > 1:
+        model = DDP(model, device_ids=[device.index], output_device=device.index)
 
     param_count = sum(p.numel() for p in model.parameters()) / 1e6
-    print(f"Model params: {param_count:.1f}M")
+    if is_main(rank):
+        print(f"Model params: {param_count:.1f}M")
 
     # --- Optimizer & scheduler ---
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-        optimizer, T_0=10, T_mult=2, eta_min=1e-6
-    )
+        optimizer, T_0=10, T_mult=2, eta_min=1e-6)
     criterion = FocalBCELoss(gamma=args.focal_gamma, label_smoothing=args.label_smoothing)
     spec_aug = SpecAugment(freq_mask_param=24, time_mask_param=50,
                            n_freq_masks=2, n_time_masks=2).to(device)
 
-    # Mixed precision — disabled for MUSA GPU compatibility
-    scaler = None
+    raw_model = model.module if hasattr(model, "module") else model
+    mel_transform = raw_model.mel_spec
+
+    scaler = None  # Disabled for MUSA compatibility
 
     # --- Training loop ---
     os.makedirs(CFG.CHECKPOINT_DIR, exist_ok=True)
     best_auc = 0.0
 
     for epoch in range(args.epochs):
-        print(f"\n--- Epoch {epoch+1}/{args.epochs} ---", flush=True)
-        train_loss = train_one_epoch(model, train_loader, optimizer, criterion, device, spec_aug, scaler)
+        if hasattr(train_sampler, "set_epoch"):
+            train_sampler.set_epoch(epoch)
 
-        print("  Validating on soundscape data...", flush=True)
-        val_auc, per_class = validate(model, val_loader, device)
+        if is_main(rank):
+            print(f"\n--- Epoch {epoch+1}/{args.epochs} ---", flush=True)
+
+        train_loss = train_one_epoch(
+            model, train_loader, optimizer, criterion, device, spec_aug,
+            scaler=scaler, mel_transform=mel_transform, precomputed=args.precomputed)
+
+        # Rank 0 validates on the full soundscape validation set. Other ranks wait
+        # before the next epoch so DDP does not advance with a different schedule.
+        if is_main(rank):
+            print("  Validating on soundscape data...", flush=True)
+            val_auc, per_class = validate(model, val_loader, device, precomputed=args.precomputed)
+
+            lr = optimizer.param_groups[0]["lr"]
+            print(f"Epoch {epoch+1}/{args.epochs} | loss={train_loss:.4f} | "
+                  f"val_auc(soundscape)={val_auc:.4f} | lr={lr:.6f}")
+
+            if val_auc > best_auc:
+                best_auc = val_auc
+                save_path = os.path.join(CFG.CHECKPOINT_DIR, f"best_{args.save_tag}.pt")
+                state_dict = raw_model.state_dict()
+                torch.save(state_dict, save_path)
+                print(f"  -> Saved best model (AUC={best_auc:.4f})")
+
+            if (epoch + 1) % 5 == 0 and per_class:
+                taxonomy = pd.read_csv(os.path.join(CFG.DATA_DIR, "taxonomy.csv"))
+                tax_map = dict(zip(taxonomy["primary_label"].astype(str), taxonomy["class_name"]))
+                taxon_aucs = {}
+                for cls_idx, auc in per_class.items():
+                    sp = species_list[cls_idx]
+                    taxon = tax_map.get(sp, "Unknown")
+                    taxon_aucs.setdefault(taxon, []).append(auc)
+                print("  Per-taxon AUC:")
+                for taxon, aucs in sorted(taxon_aucs.items()):
+                    print(f"    {taxon}: {np.mean(aucs):.4f} ({len(aucs)} species)")
+        if dist.is_initialized():
+            dist.barrier()
         scheduler.step()
 
-        lr = optimizer.param_groups[0]["lr"]
-        print(f"Epoch {epoch+1}/{args.epochs} | loss={train_loss:.4f} | "
-              f"val_auc(soundscape)={val_auc:.4f} | lr={lr:.6f}")
+    if is_main(rank):
+        print(f"\nBest soundscape validation AUC: {best_auc:.4f}")
+        print(f"Export with: python -m src.export_onnx --checkpoint best_{args.save_tag}.pt "
+              f"--backbone {model_name}")
 
-        if val_auc > best_auc:
-            best_auc = val_auc
-            save_path = os.path.join(CFG.CHECKPOINT_DIR, "best_v3.pt")
-            torch.save(model.state_dict(), save_path)
-            print(f"  -> Saved best model (AUC={best_auc:.4f})")
-
-        # Log per-taxon AUC every 5 epochs
-        if (epoch + 1) % 5 == 0 and per_class:
-            taxonomy = pd.read_csv(os.path.join(CFG.DATA_DIR, "taxonomy.csv"))
-            tax_map = dict(zip(taxonomy["primary_label"].astype(str), taxonomy["class_name"]))
-            taxon_aucs = {}
-            for cls_idx, auc in per_class.items():
-                sp = species_list[cls_idx]
-                taxon = tax_map.get(sp, "Unknown")
-                taxon_aucs.setdefault(taxon, []).append(auc)
-            print("  Per-taxon AUC:")
-            for taxon, aucs in sorted(taxon_aucs.items()):
-                print(f"    {taxon}: {np.mean(aucs):.4f} ({len(aucs)} species)")
-
-    print(f"\nBest soundscape validation AUC: {best_auc:.4f}")
-    print("Done. Export with: python -m src.export_onnx --checkpoint best_v3.pt")
+    cleanup_ddp()
 
 
 if __name__ == "__main__":
+    mp.set_start_method("spawn", force=True)
     main()

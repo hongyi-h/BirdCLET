@@ -1,11 +1,17 @@
-"""Pseudo-labeling v2: Iterative, confidence-aware, with teacher ensemble support.
+"""Iterative Noisy Student pseudo-labeling with power scaling and ensemble teacher.
 
 Usage:
-    # Round 1: use best_v3.pt as teacher
-    python -m src.pseudo_label_v2 --checkpoint best_v3.pt --round 1
+    # Round 1: ensemble of 3 backbones as teacher
+    python -m src.pseudo_label --round 1 --checkpoints best_v4_v2s.pt best_v4_nfnet.pt best_v4_regnety.pt \
+        --backbones v2s nfnet regnety --threshold 0.7 --power_gamma 1.5
 
-    # Round 2: use model retrained on round-1 pseudo-labels
-    python -m src.pseudo_label_v2 --checkpoint best_v3_r1.pt --round 2 --threshold 0.5
+    # Round 2: use R1 students as teacher, lower threshold
+    python -m src.pseudo_label --round 2 --checkpoints best_v4_v2s_r1.pt best_v4_nfnet_r1.pt best_v4_regnety_r1.pt \
+        --backbones v2s nfnet regnety --threshold 0.6 --power_gamma 1.5
+
+    # Round 3-4: progressively lower
+    python -m src.pseudo_label --round 3 --threshold 0.5 --power_gamma 1.3 ...
+    python -m src.pseudo_label --round 4 --threshold 0.4 --power_gamma 1.3 ...
 """
 import os
 import argparse
@@ -16,86 +22,101 @@ import torch
 import soundfile as sf
 
 import src.config as CFG
-from src.model import BirdModel, MelSpecTransform
+from src.model import BirdModel
 from src.dataset import build_label_map
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", default="best_v3.pt")
-    parser.add_argument("--backbone", default="tf_efficientnetv2_s.in21k_ft_in1k")
+    parser.add_argument("--checkpoints", nargs="+", required=True,
+                        help="Checkpoint filenames for ensemble teacher")
+    parser.add_argument("--backbones", nargs="+", required=True,
+                        help="Backbone keys matching checkpoints (e.g. v2s nfnet regnety)")
     parser.add_argument("--round", type=int, default=1)
-    parser.add_argument("--threshold", type=float, default=0.6,
+    parser.add_argument("--threshold", type=float, default=0.7,
                         help="Min max-prob to keep a segment")
-    parser.add_argument("--soft_threshold", type=float, default=0.15,
-                        help="Min per-species prob to include in soft label")
+    parser.add_argument("--power_gamma", type=float, default=1.5,
+                        help="Power scaling exponent to suppress mid-confidence noise")
+    parser.add_argument("--soft_threshold", type=float, default=0.1,
+                        help="Min per-species prob after power scaling to include")
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--tta", action="store_true",
-                        help="Test-time augmentation (3 crops + flip)")
+    parser.add_argument("--tta", action="store_true", help="Test-time augmentation")
     return parser.parse_args()
 
 
-def load_model(checkpoint, backbone, device):
-    model = BirdModel(pretrained=False, model_name=backbone).to(device)
-
-    ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, checkpoint)
-    state = torch.load(ckpt_path, map_location=device)
-    model.load_state_dict(state, strict=False)
-    model.eval()
-    print(f"Loaded: {ckpt_path}")
-    return model
-
-
-@torch.no_grad()
-def predict_segments(model, segments, device, batch_size=64):
-    """Predict on a list of numpy arrays. Returns (N, 234) probabilities."""
-    all_probs = []
-    for i in range(0, len(segments), batch_size):
-        batch = np.stack(segments[i:i+batch_size])
-        tensor = torch.from_numpy(batch).float().to(device)
-        logits = model(tensor)
-        probs = torch.sigmoid(logits).cpu().numpy()
-        all_probs.append(probs)
-    return np.concatenate(all_probs, axis=0)
+def load_ensemble(checkpoints, backbones, device):
+    """Load multiple models as an ensemble teacher."""
+    models = []
+    for ckpt, bb_key in zip(checkpoints, backbones):
+        bb_name = CFG.BACKBONE_REGISTRY[bb_key]
+        model = BirdModel(pretrained=False, model_name=bb_name).to(device)
+        ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, ckpt)
+        state = torch.load(ckpt_path, map_location=device)
+        model.load_state_dict(state, strict=False)
+        model.eval()
+        models.append(model)
+        print(f"Loaded teacher: {ckpt} ({bb_name})")
+    return models
 
 
 @torch.no_grad()
-def predict_segments_tta(model, segments, device, batch_size=64):
-    """TTA: original + time-reversed + two random crops averaged."""
-    probs_orig = predict_segments(model, segments, device, batch_size)
+def predict_ensemble(models, segments, device, batch_size=64):
+    """Ensemble prediction: average sigmoid probabilities across models."""
+    all_probs = np.zeros((len(segments), CFG.NUM_CLASSES), dtype=np.float64)
 
-    # Time reversal
+    for model in models:
+        model_probs = []
+        for i in range(0, len(segments), batch_size):
+            batch = np.stack(segments[i:i + batch_size])
+            tensor = torch.from_numpy(batch).float().to(device)
+            logits = model(tensor)
+            probs = torch.sigmoid(logits).cpu().numpy()
+            model_probs.append(probs)
+        model_probs = np.concatenate(model_probs, axis=0)
+        all_probs += model_probs
+
+    all_probs /= len(models)
+    return all_probs
+
+
+@torch.no_grad()
+def predict_ensemble_tta(models, segments, device, batch_size=64):
+    """TTA: original + time-reversed, averaged."""
+    probs_orig = predict_ensemble(models, segments, device, batch_size)
     segments_rev = [s[::-1].copy() for s in segments]
-    probs_rev = predict_segments(model, segments_rev, device, batch_size)
-
+    probs_rev = predict_ensemble(models, segments_rev, device, batch_size)
     return (probs_orig + probs_rev) / 2.0
+
+
+def power_scale(probs, gamma):
+    """Apply power scaling: p^gamma. Suppresses mid-confidence, preserves high-confidence."""
+    return np.power(probs, gamma)
 
 
 def generate_pseudo_labels(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
-    print(f"Round {args.round} | threshold={args.threshold} | soft_threshold={args.soft_threshold}")
+    print(f"Round {args.round} | threshold={args.threshold} | "
+          f"power_gamma={args.power_gamma} | soft_threshold={args.soft_threshold}")
+    print(f"Ensemble: {len(args.checkpoints)} models")
 
-    model = load_model(args.checkpoint, args.backbone, device)
-
+    models = load_ensemble(args.checkpoints, args.backbones, device)
     label_map = build_label_map()
     species_list = sorted(label_map.keys())
 
     # Find all soundscape files
-    soundscape_dir = CFG.TRAIN_SOUNDSCAPES_DIR
-    all_files = sorted(glob.glob(os.path.join(soundscape_dir, "*.ogg")))
+    all_files = sorted(glob.glob(os.path.join(CFG.TRAIN_SOUNDSCAPES_DIR, "*.ogg")))
     print(f"Found {len(all_files)} soundscape files")
 
     if not all_files:
-        print("No soundscape files found. Exiting.")
+        print("No soundscape files found.")
         return
 
     # Exclude already-labeled segments
     labeled_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train_soundscapes_labels.csv"))
     labeled_keys = set()
     for _, row in labeled_df.iterrows():
-        key = f"{row['filename']}_{row['start']}"
-        labeled_keys.add(key)
+        labeled_keys.add(f"{row['filename']}_{row['start']}")
     print(f"Excluding {len(labeled_keys)} already-labeled segments")
 
     num_samples_per_seg = CFG.SR * CFG.DURATION
@@ -127,8 +148,7 @@ def generate_pseudo_labels(args):
             s = seconds % 60
             start_str = f"{h:02d}:{m:02d}:{s:02d}"
 
-            key = f"{fname}_{start_str}"
-            if key in labeled_keys:
+            if f"{fname}_{start_str}" in labeled_keys:
                 continue
 
             seg = audio[start_sample:start_sample + num_samples_per_seg]
@@ -143,26 +163,32 @@ def generate_pseudo_labels(args):
 
         total_segments += len(segments)
 
-        # Predict
+        # Ensemble prediction
         if args.tta:
-            probs = predict_segments_tta(model, segments, device, args.batch_size)
+            probs = predict_ensemble_tta(models, segments, device, args.batch_size)
         else:
-            probs = predict_segments(model, segments, device, args.batch_size)
+            probs = predict_ensemble(models, segments, device, args.batch_size)
+
+        # Power scaling to suppress noisy mid-confidence predictions
+        probs_scaled = power_scale(probs, args.power_gamma)
 
         # Filter and save
-        for j, (start_str, prob) in enumerate(zip(seg_starts, probs)):
-            max_prob = prob.max()
+        for j, (start_str, prob_raw, prob_sc) in enumerate(zip(seg_starts, probs, probs_scaled)):
+            max_prob = prob_raw.max()
             if max_prob < args.threshold:
                 continue
 
-            # Apply soft threshold
-            prob_filtered = prob.copy()
-            prob_filtered[prob_filtered < args.soft_threshold] = 0.0
+            # Apply soft threshold on power-scaled probs
+            prob_final = prob_sc.copy()
+            prob_final[prob_final < args.soft_threshold] = 0.0
+
+            if prob_final.max() < 0.1:
+                continue
 
             kept_segments += 1
             row = {"filename": fname, "start": start_str, "max_prob": float(max_prob)}
             for k, sp in enumerate(species_list):
-                row[sp] = float(prob_filtered[k])
+                row[sp] = float(prob_final[k])
             rows.append(row)
 
         if (fi + 1) % 20 == 0:
@@ -173,12 +199,13 @@ def generate_pseudo_labels(args):
     out_path = os.path.join(CFG.DATA_DIR, f"pseudo_labels_r{args.round}.csv")
     pseudo_df.to_csv(out_path, index=False)
 
-    # Also save as the default pseudo_labels.csv for train_v3
+    # Also save as default for training
     default_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
     pseudo_df.to_csv(default_path, index=False)
 
     print(f"\nSaved {len(pseudo_df)} pseudo-labeled segments to {out_path}")
     print(f"Retention rate: {100*kept_segments/max(total_segments,1):.1f}%")
+
     species_detected = (pseudo_df[species_list].sum(axis=0) > 0).sum()
     print(f"Species detected: {species_detected}/{len(species_list)}")
 
