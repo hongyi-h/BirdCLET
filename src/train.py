@@ -492,8 +492,8 @@ def main():
     spec_aug = SpecAugment(freq_mask_param=24, time_mask_param=50,
                            n_freq_masks=2, n_time_masks=2).to(device)
 
-    # Mixed precision
-    scaler = torch.cuda.amp.GradScaler() if device.type == "cuda" else None
+    # Mixed precision — disabled for MUSA GPU compatibility
+    scaler = None
 
     # --- Training loop ---
     os.makedirs(CFG.CHECKPOINT_DIR, exist_ok=True)
