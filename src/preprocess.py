@@ -17,6 +17,11 @@ import src.config as CFG
 from src.model import MelSpecTransform
 from src.dataset import build_label_map
 
+try:
+    from tqdm.auto import tqdm
+except Exception:
+    tqdm = None
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -54,6 +59,12 @@ def save_manifest(rows, out_dir):
     pd.DataFrame(rows).to_csv(os.path.join(out_dir, "manifest.csv"), index=False)
 
 
+def progress_iter(iterable, **kwargs):
+    if tqdm is None:
+        return iterable
+    return tqdm(iterable, **kwargs)
+
+
 def extract_mel_numpy(audio_np, mel_transform):
     """Convert raw audio numpy array to mel spectrogram numpy array."""
     with torch.no_grad():
@@ -72,7 +83,8 @@ def process_focal(crops_per_file, mel_transform):
     total = len(train_df)
     manifest = []
 
-    for idx, row in train_df.iterrows():
+    row_iter = progress_iter(train_df.iterrows(), total=total, desc="Focal audio", unit="file")
+    for idx, row in row_iter:
         path = os.path.join(CFG.TRAIN_AUDIO_DIR, row["filename"])
         if not os.path.exists(path):
             continue
@@ -127,7 +139,7 @@ def process_focal(crops_per_file, mel_transform):
                 "crop": crop_i,
             })
 
-        if (idx + 1) % 1000 == 0:
+        if tqdm is None and (idx + 1) % 1000 == 0:
             print(f"  Focal: {idx+1}/{total}", flush=True)
 
     save_manifest(manifest, out_dir)
@@ -143,7 +155,8 @@ def process_soundscape_labeled(mel_transform):
     num_samples = CFG.SR * CFG.DURATION
     manifest = []
 
-    for idx, row in sl_df.iterrows():
+    row_iter = progress_iter(sl_df.iterrows(), total=len(sl_df), desc="Labeled soundscapes", unit="segment")
+    for idx, row in row_iter:
         path = os.path.join(CFG.TRAIN_SOUNDSCAPES_DIR, row["filename"])
         if not os.path.exists(path):
             continue
@@ -191,7 +204,7 @@ def process_soundscape_labeled(mel_transform):
             "source_idx": idx,
         })
 
-        if (idx + 1) % 500 == 0:
+        if tqdm is None and (idx + 1) % 500 == 0:
             print(f"  Soundscape labeled: {idx+1}/{len(sl_df)}", flush=True)
 
     save_manifest(manifest, out_dir)
@@ -205,7 +218,14 @@ def process_soundscape_unlabeled(mel_transform):
 
     labeled_df = pd.read_csv(os.path.join(CFG.DATA_DIR, "train_soundscapes_labels.csv"))
     labeled_keys = set()
-    for _, row in labeled_df.iterrows():
+    key_iter = progress_iter(
+        labeled_df.iterrows(),
+        total=len(labeled_df),
+        desc="Labeled keys",
+        unit="row",
+        leave=False,
+    )
+    for _, row in key_iter:
         labeled_keys.add(f"{row['filename']}_{row['start']}")
 
     all_files = sorted(glob.glob(os.path.join(CFG.TRAIN_SOUNDSCAPES_DIR, "*.ogg")))
@@ -214,7 +234,8 @@ def process_soundscape_unlabeled(mel_transform):
 
     manifest = []
 
-    for fi, fpath in enumerate(all_files):
+    file_iter = progress_iter(enumerate(all_files), total=len(all_files), desc="Unlabeled files", unit="file")
+    for fi, fpath in file_iter:
         fname = os.path.basename(fpath)
         try:
             audio, _ = sf.read(fpath, dtype="float32")
@@ -250,7 +271,9 @@ def process_soundscape_unlabeled(mel_transform):
             })
             seg_count += 1
 
-        if (fi + 1) % 20 == 0:
+        if hasattr(file_iter, "set_postfix"):
+            file_iter.set_postfix(segments=seg_count)
+        elif (fi + 1) % 20 == 0:
             print(f"  Unlabeled: {fi+1}/{len(all_files)} files, {seg_count} segments", flush=True)
 
     save_manifest(manifest, out_dir)
@@ -265,7 +288,14 @@ def build_unlabeled_mel_lookup():
     manifest = pd.read_csv(manifest_path)
     lookup = {}
     base_dir = os.path.dirname(manifest_path)
-    for _, row in manifest.iterrows():
+    row_iter = progress_iter(
+        manifest.iterrows(),
+        total=len(manifest),
+        desc="Unlabeled mel lookup",
+        unit="row",
+        leave=False,
+    )
+    for _, row in row_iter:
         mel_path = row.get("mel_path", "")
         if pd.isna(mel_path) or not str(mel_path):
             stem = row.get("stem", f"ul_{int(row['idx']):07d}")
@@ -313,7 +343,8 @@ def process_pseudo_labels(mel_transform, pseudo_path, confidence_threshold, soft
     manifest = []
     kept = 0
 
-    for idx, row in pseudo_df.iterrows():
+    row_iter = progress_iter(pseudo_df.iterrows(), total=len(pseudo_df), desc="Pseudo labels", unit="row")
+    for idx, row in row_iter:
         if "max_prob" in row and float(row["max_prob"]) < confidence_threshold:
             continue
 
@@ -360,7 +391,9 @@ def process_pseudo_labels(mel_transform, pseudo_path, confidence_threshold, soft
         })
         kept += 1
 
-        if kept % 1000 == 0:
+        if hasattr(row_iter, "set_postfix") and kept % 100 == 0:
+            row_iter.set_postfix(kept=kept)
+        elif tqdm is None and kept % 1000 == 0:
             print(f"  Pseudo: {kept} segments", flush=True)
 
     save_manifest(manifest, out_dir)
