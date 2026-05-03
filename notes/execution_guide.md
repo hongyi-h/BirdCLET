@@ -1,4 +1,42 @@
-# Execution Guide — BirdCLEF 2026 Winning Pipeline
+# Execution Guide — BirdCLEF 2026 Pipeline
+
+## 2026-05-04 Priority Update
+
+Confirmed anchor:
+- `model_v2s_full_melmix.onnx`: public LB `0.801`.
+
+After reviewing the local reference notebooks in `reference/`, the highest-leverage path is no longer "train three more versions of our CNN first." The 0.94+ public notebooks are driven by Perch v2 ONNX embeddings/logits, 12-window sequence modeling, public distilled SED folds, and per-class rank blending.
+
+Immediate priority:
+
+1. Reproduce a Perch/ProtoSSM + public SED reference branch.
+2. Submit it alone as a high baseline.
+3. Rank-blend our `model_v2s_full_melmix.onnx` at low weight, initially 5-15%, and keep it only if public LB improves.
+4. Resume nfnet/regnety full-data training only after the Perch+SED blend is working.
+
+See `notes/reference_notebook_design_review_2026-05-04.md` for the first-principles rationale.
+
+### Rank-blend branch CSVs
+
+After a reference notebook produces `submission_protossm.csv` and `submission_sed.csv`, blend them with strict row/column checks:
+
+```bash
+python -m src.blend_submissions \
+    --inputs submission_protossm.csv submission_sed.csv \
+    --weights 0.60 0.40 \
+    --output submission.csv \
+    --sample data/sample_submission.csv
+```
+
+To test our CNN as a small diversity branch:
+
+```bash
+python -m src.blend_submissions \
+    --inputs submission_protossm.csv submission_sed.csv submission_cnn.csv \
+    --weights 0.55 0.35 0.10 \
+    --output submission.csv \
+    --sample data/sample_submission.csv
+```
 
 ## Prerequisites
 
@@ -66,6 +104,35 @@ torchrun --standalone --nproc_per_node=8 -m src.train \
 - `checkpoints/best_v4_nfnet.pt`
 - `checkpoints/best_v4_regnety.pt`
 - `checkpoints/last_*.pt` is also saved. For runs using `--train_all_soundscapes`, prefer `last_*` because `best_*` is selected by leaky validation.
+
+### Full-data models after valid single-model LB
+
+Current valid anchor:
+- `model_v2s_full_melmix.onnx`: public LB `0.801`.
+
+Next full-data diversity runs:
+
+```bash
+torchrun --standalone --nproc_per_node=8 -m src.train \
+    --backbone nfnet --epochs 36 --batch_size 128 --lr 3e-4 \
+    --precomputed --precomputed_mixup_prob 0.3 \
+    --train_all_soundscapes --num_workers 4 --save_tag v4_nfnet_full_melmix
+
+python -m src.export_onnx \
+    --checkpoint last_v4_nfnet_full_melmix.pt \
+    --backbone nfnet \
+    --output model_nfnet_full_melmix.onnx
+
+torchrun --standalone --nproc_per_node=8 -m src.train \
+    --backbone regnety --epochs 36 --batch_size 128 --lr 3e-4 \
+    --precomputed --precomputed_mixup_prob 0.3 \
+    --train_all_soundscapes --num_workers 4 --save_tag v4_regnety_full_melmix
+
+python -m src.export_onnx \
+    --checkpoint last_v4_regnety_full_melmix.pt \
+    --backbone regnety \
+    --output model_regnety_full_melmix.onnx
+```
 
 ### Quick LB check: export best single model and submit
 ```bash

@@ -250,3 +250,43 @@ Decision:
 - Rerun the notebook with the fixed `inference.py`.
 - In the notebook log, verify that it prints a non-empty `Found main ONNX models: [...]` containing `model_v2s_full_melmix.onnx`.
 - Also verify non-constant prediction stats before submitting.
+
+## Leaderboard Smoke Score 0.801 — 2026-05-04
+
+Observation:
+- Single-model leaderboard score: `0.801`.
+- Model: `model_v2s_full_melmix.onnx`, exported from `last_v4_v2s_full_melmix.pt`.
+
+Interpretation:
+- The previous `0.500` result was an invalid/dummy submission path, not a trained-model quality signal.
+- The inference pipeline now loads the ONNX model and produces useful rankings.
+- `0.801` is the first valid public LB anchor for this project.
+
+Decision:
+- Stop spending time on inference plumbing unless logs show another loading or constant-prediction issue.
+- The shortest likely improvement is model diversity: train full-data `nfnet` and `regnety` with the same precomputed mel mixup setup, export their `last_*` checkpoints, and let `inference.py` rank-average all attached ONNX models.
+- Pseudo-labeling should come after at least two valid full-data teachers unless the ensemble improvement is unexpectedly small.
+
+Next commands:
+
+```bash
+torchrun --standalone --nproc_per_node=8 -m src.train \
+  --backbone nfnet --epochs 36 --batch_size 128 --lr 3e-4 \
+  --precomputed --precomputed_mixup_prob 0.3 \
+  --train_all_soundscapes --num_workers 4 --save_tag v4_nfnet_full_melmix
+
+python -m src.export_onnx \
+  --checkpoint last_v4_nfnet_full_melmix.pt \
+  --backbone nfnet \
+  --output model_nfnet_full_melmix.onnx
+
+torchrun --standalone --nproc_per_node=8 -m src.train \
+  --backbone regnety --epochs 36 --batch_size 128 --lr 3e-4 \
+  --precomputed --precomputed_mixup_prob 0.3 \
+  --train_all_soundscapes --num_workers 4 --save_tag v4_regnety_full_melmix
+
+python -m src.export_onnx \
+  --checkpoint last_v4_regnety_full_melmix.pt \
+  --backbone regnety \
+  --output model_regnety_full_melmix.onnx
+```
