@@ -1,0 +1,287 @@
+[2026-05-03T07:54:21.775106102Z] W0503 15:54:21.317000 1 site-packages/torch/distributed/run.py:774] 
+[2026-05-03T07:54:21.775262531Z] W0503 15:54:21.317000 1 site-packages/torch/distributed/run.py:774] *****************************************
+[2026-05-03T07:54:21.775456773Z] W0503 15:54:21.317000 1 site-packages/torch/distributed/run.py:774] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2026-05-03T07:54:21.775606656Z] W0503 15:54:21.317000 1 site-packages/torch/distributed/run.py:774] *****************************************
+[2026-05-03T07:55:35.760177194Z] DDP initialized: world_size=8, backend=nccl
+[2026-05-03T07:55:35.760353834Z] Device: cuda:0 | World size: 8
+[2026-05-03T07:55:35.760528716Z] Config: backbone=v2s, epochs=36, bs=128x8=1024, lr=0.0003, pseudo=False, precomputed=True, val_ratio=0.3, train_all_soundscapes=True
+[2026-05-03T08:01:10.760359437Z] Precomputed focal: 106647, soundscape: 1478
+[2026-05-03T08:01:10.760489364Z] SC train: 1400, SC val: 78 (sites: {'S18', 'S03'})
+[2026-05-03T08:01:10.760591891Z] WARNING: --train_all_soundscapes is set; validation is leaky and for monitoring only.
+[2026-05-03T08:01:10.760690544Z] Total train: 142119, val: 78
+[2026-05-03T08:01:10.760782476Z] Train domains: {'focal': 106647, 'soundscape': 35472}
+[2026-05-03T08:01:10.760874502Z] Train species: 234, val evaluable species upper bound: 6
+[2026-05-03T08:01:11.758822006Z] Loading model: tf_efficientnetv2_s.in21k_ft_in1k
+[2026-05-03T08:01:15.759848846Z] Model params: 20.5M
+[2026-05-03T08:01:15.760299304Z] 
+[2026-05-03T08:01:15.760548445Z] --- Epoch 1/36 ---
+[2026-05-03T08:03:20.766467887Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.766688710Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.767013680Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.767303018Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.767508641Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.767778626Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.768068893Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.768324553Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.768560734Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Attempting to run cuBLAS, but there was no current CUDA context! Attempting to set the primary context... (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:183.)
+[2026-05-03T08:03:20.768702381Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.768875006Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.769028904Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.769155069Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.769319980Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.769487611Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.769701518Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.769837281Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.770005310Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.770141841Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.770292887Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.770429799Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.770615303Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.770750504Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.770911426Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.771077435Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.771278338Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.771445136Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.771593706Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.771759227Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.771911062Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:20.772060930Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T08:03:20.772200875Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T08:03:20.772351269Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T08:03:20.772474184Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T08:03:21.759617762Z]   [train] batch 0/138 | loss=0.2026
+[2026-05-03T08:04:42.759339788Z]   [train] batch 100/138 | loss=0.0244
+[2026-05-03T08:05:09.759068880Z]   Validating on soundscape data...
+[2026-05-03T08:05:39.759773650Z] Epoch 1/36 | loss=0.0203 | val_auc(soundscape)=0.8200 | lr=0.000300
+[2026-05-03T08:05:40.761089254Z]   -> Saved best model (AUC=0.8200)
+[2026-05-03T08:05:40.761320089Z] 
+[2026-05-03T08:05:40.761470618Z] --- Epoch 2/36 ---
+[2026-05-03T08:05:43.760834044Z]   [train] batch 0/138 | loss=0.0074
+[2026-05-03T08:07:13.760208740Z]   [train] batch 100/138 | loss=0.0067
+[2026-05-03T08:07:42.759830545Z]   Validating on soundscape data...
+[2026-05-03T08:07:43.760901348Z] Epoch 2/36 | loss=0.0113 | val_auc(soundscape)=0.9768 | lr=0.000293
+[2026-05-03T08:07:43.761062769Z]   -> Saved best model (AUC=0.9768)
+[2026-05-03T08:07:43.761212753Z] 
+[2026-05-03T08:07:43.761356600Z] --- Epoch 3/36 ---
+[2026-05-03T08:07:47.759974654Z]   [train] batch 0/138 | loss=0.0177
+[2026-05-03T08:09:15.759681489Z]   [train] batch 100/138 | loss=0.0044
+[2026-05-03T08:09:45.759779500Z]   Validating on soundscape data...
+[2026-05-03T08:09:45.759938173Z] Epoch 3/36 | loss=0.0097 | val_auc(soundscape)=0.9979 | lr=0.000271
+[2026-05-03T08:09:46.761452356Z]   -> Saved best model (AUC=0.9979)
+[2026-05-03T08:09:46.761619566Z] 
+[2026-05-03T08:09:46.761776228Z] --- Epoch 4/36 ---
+[2026-05-03T08:09:50.759326600Z]   [train] batch 0/138 | loss=0.0169
+[2026-05-03T08:11:20.759301469Z]   [train] batch 100/138 | loss=0.0054
+[2026-05-03T08:11:49.760482726Z]   Validating on soundscape data...
+[2026-05-03T08:11:50.760562284Z] Epoch 4/36 | loss=0.0095 | val_auc(soundscape)=0.9979 | lr=0.000238
+[2026-05-03T08:11:50.760747000Z] 
+[2026-05-03T08:11:50.760936561Z] --- Epoch 5/36 ---
+[2026-05-03T08:11:54.759995080Z]   [train] batch 0/138 | loss=0.0157
+[2026-05-03T08:13:24.760301712Z]   [train] batch 100/138 | loss=0.0034
+[2026-05-03T08:13:55.760879953Z]   Validating on soundscape data...
+[2026-05-03T08:13:55.761135312Z] Epoch 5/36 | loss=0.0087 | val_auc(soundscape)=1.0000 | lr=0.000197
+[2026-05-03T08:13:56.760393469Z]   -> Saved best model (AUC=1.0000)
+[2026-05-03T08:13:56.760598614Z]   Per-taxon AUC:
+[2026-05-03T08:13:56.760821001Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T08:13:56.761005448Z] 
+[2026-05-03T08:13:56.761217385Z] --- Epoch 6/36 ---
+[2026-05-03T08:14:00.760366079Z]   [train] batch 0/138 | loss=0.0047
+[2026-05-03T08:15:32.763179085Z]   [train] batch 100/138 | loss=0.0035
+[2026-05-03T08:16:01.759904168Z]   Validating on soundscape data...
+[2026-05-03T08:16:02.759958757Z] Epoch 6/36 | loss=0.0068 | val_auc(soundscape)=1.0000 | lr=0.000150
+[2026-05-03T08:16:02.760221337Z] 
+[2026-05-03T08:16:02.760418525Z] --- Epoch 7/36 ---
+[2026-05-03T08:16:06.759395159Z]   [train] batch 0/138 | loss=0.0030
+[2026-05-03T08:17:35.759879053Z]   [train] batch 100/138 | loss=0.0026
+[2026-05-03T08:18:04.760522677Z]   Validating on soundscape data...
+[2026-05-03T08:18:05.760601198Z] Epoch 7/36 | loss=0.0066 | val_auc(soundscape)=1.0000 | lr=0.000104
+[2026-05-03T08:18:05.760791833Z] 
+[2026-05-03T08:18:05.760961786Z] --- Epoch 8/36 ---
+[2026-05-03T08:18:09.759350619Z]   [train] batch 0/138 | loss=0.0256
+[2026-05-03T08:19:37.760681221Z]   [train] batch 100/138 | loss=0.0031
+[2026-05-03T08:20:07.760975017Z]   Validating on soundscape data...
+[2026-05-03T08:20:08.760319321Z] Epoch 8/36 | loss=0.0080 | val_auc(soundscape)=1.0000 | lr=0.000063
+[2026-05-03T08:20:08.760555962Z] 
+[2026-05-03T08:20:08.760747196Z] --- Epoch 9/36 ---
+[2026-05-03T08:20:11.759499079Z]   [train] batch 0/138 | loss=0.0032
+[2026-05-03T08:21:43.761238692Z]   [train] batch 100/138 | loss=0.0024
+[2026-05-03T08:22:12.760176682Z]   Validating on soundscape data...
+[2026-05-03T08:22:13.761473620Z] Epoch 9/36 | loss=0.0070 | val_auc(soundscape)=1.0000 | lr=0.000030
+[2026-05-03T08:22:13.761658746Z] 
+[2026-05-03T08:22:13.761852143Z] --- Epoch 10/36 ---
+[2026-05-03T08:22:18.759668192Z]   [train] batch 0/138 | loss=0.0030
+[2026-05-03T08:23:48.759268123Z]   [train] batch 100/138 | loss=0.0023
+[2026-05-03T08:24:17.759549928Z]   Validating on soundscape data...
+[2026-05-03T08:24:18.759756030Z] Epoch 10/36 | loss=0.0065 | val_auc(soundscape)=1.0000 | lr=0.000008
+[2026-05-03T08:24:18.759923654Z]   Per-taxon AUC:
+[2026-05-03T08:24:18.760113278Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T08:24:18.760249273Z] 
+[2026-05-03T08:24:18.760406395Z] --- Epoch 11/36 ---
+[2026-05-03T08:24:23.759243731Z]   [train] batch 0/138 | loss=0.0025
+[2026-05-03T08:25:51.759819516Z]   [train] batch 100/138 | loss=0.0022
+[2026-05-03T08:26:21.760667323Z]   Validating on soundscape data...
+[2026-05-03T08:26:21.760850835Z] Epoch 11/36 | loss=0.0073 | val_auc(soundscape)=1.0000 | lr=0.000300
+[2026-05-03T08:26:21.761023033Z] 
+[2026-05-03T08:26:21.761197771Z] --- Epoch 12/36 ---
+[2026-05-03T08:26:25.760511323Z]   [train] batch 0/138 | loss=0.0023
+[2026-05-03T08:27:54.759828225Z]   [train] batch 100/138 | loss=0.0253
+[2026-05-03T08:28:23.759557630Z]   Validating on soundscape data...
+[2026-05-03T08:28:24.759593498Z] Epoch 12/36 | loss=0.0066 | val_auc(soundscape)=1.0000 | lr=0.000298
+[2026-05-03T08:28:24.759787830Z] 
+[2026-05-03T08:28:24.759952341Z] --- Epoch 13/36 ---
+[2026-05-03T08:28:28.760865348Z]   [train] batch 0/138 | loss=0.0025
+[2026-05-03T08:29:57.760081186Z]   [train] batch 100/138 | loss=0.0028
+[2026-05-03T08:30:27.760702386Z]   Validating on soundscape data...
+[2026-05-03T08:30:27.760874260Z] Epoch 13/36 | loss=0.0066 | val_auc(soundscape)=1.0000 | lr=0.000293
+[2026-05-03T08:30:27.761044359Z] 
+[2026-05-03T08:30:27.761220605Z] --- Epoch 14/36 ---
+[2026-05-03T08:30:31.760422246Z]   [train] batch 0/138 | loss=0.0027
+[2026-05-03T08:32:00.759374182Z]   [train] batch 100/138 | loss=0.0019
+[2026-05-03T08:32:30.759611371Z]   Validating on soundscape data...
+[2026-05-03T08:32:31.761110359Z] Epoch 14/36 | loss=0.0064 | val_auc(soundscape)=1.0000 | lr=0.000284
+[2026-05-03T08:32:31.761327877Z] 
+[2026-05-03T08:32:31.761515469Z] --- Epoch 15/36 ---
+[2026-05-03T08:32:35.759424729Z]   [train] batch 0/138 | loss=0.0296
+[2026-05-03T08:34:05.759777251Z]   [train] batch 100/138 | loss=0.0020
+[2026-05-03T08:34:35.759857997Z]   Validating on soundscape data...
+[2026-05-03T08:34:36.760742012Z] Epoch 15/36 | loss=0.0067 | val_auc(soundscape)=1.0000 | lr=0.000271
+[2026-05-03T08:34:36.760936176Z]   Per-taxon AUC:
+[2026-05-03T08:34:36.761091798Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T08:34:36.761261949Z] 
+[2026-05-03T08:34:36.761438854Z] --- Epoch 16/36 ---
+[2026-05-03T08:34:39.759784148Z]   [train] batch 0/138 | loss=0.0032
+[2026-05-03T08:36:10.760202752Z]   [train] batch 100/138 | loss=0.0025
+[2026-05-03T08:36:38.759601477Z]   Validating on soundscape data...
+[2026-05-03T08:36:39.759634480Z] Epoch 16/36 | loss=0.0055 | val_auc(soundscape)=1.0000 | lr=0.000256
+[2026-05-03T08:36:39.759857975Z] 
+[2026-05-03T08:36:39.760047337Z] --- Epoch 17/36 ---
+[2026-05-03T08:36:43.760605141Z]   [train] batch 0/138 | loss=0.0013
+[2026-05-03T08:38:13.760326659Z]   [train] batch 100/138 | loss=0.0012
+[2026-05-03T08:38:42.760420684Z]   Validating on soundscape data...
+[2026-05-03T08:38:42.760632062Z] Epoch 17/36 | loss=0.0060 | val_auc(soundscape)=1.0000 | lr=0.000238
+[2026-05-03T08:38:42.760824021Z] 
+[2026-05-03T08:38:42.761055523Z] --- Epoch 18/36 ---
+[2026-05-03T08:38:46.760714209Z]   [train] batch 0/138 | loss=0.0241
+[2026-05-03T08:40:18.759827125Z]   [train] batch 100/138 | loss=0.0016
+[2026-05-03T08:40:47.759859508Z]   Validating on soundscape data...
+[2026-05-03T08:40:47.760061407Z] Epoch 18/36 | loss=0.0064 | val_auc(soundscape)=1.0000 | lr=0.000218
+[2026-05-03T08:40:47.760251046Z] 
+[2026-05-03T08:40:47.760516388Z] --- Epoch 19/36 ---
+[2026-05-03T08:40:52.761487905Z]   [train] batch 0/138 | loss=0.0298
+[2026-05-03T08:42:22.760659057Z]   [train] batch 100/138 | loss=0.0020
+[2026-05-03T08:42:52.760484652Z]   Validating on soundscape data...
+[2026-05-03T08:42:53.760140692Z] Epoch 19/36 | loss=0.0061 | val_auc(soundscape)=1.0000 | lr=0.000197
+[2026-05-03T08:42:53.760332634Z] 
+[2026-05-03T08:42:53.760504780Z] --- Epoch 20/36 ---
+[2026-05-03T08:42:57.759752259Z]   [train] batch 0/138 | loss=0.0091
+[2026-05-03T08:44:29.759317976Z]   [train] batch 100/138 | loss=0.0016
+[2026-05-03T08:44:59.760972860Z]   Validating on soundscape data...
+[2026-05-03T08:44:59.761143059Z] Epoch 20/36 | loss=0.0053 | val_auc(soundscape)=1.0000 | lr=0.000174
+[2026-05-03T08:44:59.761337687Z]   Per-taxon AUC:
+[2026-05-03T08:44:59.761559822Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T08:44:59.761719879Z] 
+[2026-05-03T08:44:59.761890057Z] --- Epoch 21/36 ---
+[2026-05-03T08:45:03.759205102Z]   [train] batch 0/138 | loss=0.0016
+[2026-05-03T08:46:35.759952959Z]   [train] batch 100/138 | loss=0.0246
+[2026-05-03T08:47:05.759914590Z]   Validating on soundscape data...
+[2026-05-03T08:47:06.760341767Z] Epoch 21/36 | loss=0.0063 | val_auc(soundscape)=1.0000 | lr=0.000150
+[2026-05-03T08:47:06.760531695Z] 
+[2026-05-03T08:47:06.760688146Z] --- Epoch 22/36 ---
+[2026-05-03T08:47:09.759186708Z]   [train] batch 0/138 | loss=0.0294
+[2026-05-03T08:48:39.759447460Z]   [train] batch 100/138 | loss=0.0082
+[2026-05-03T08:49:08.759363800Z]   Validating on soundscape data...
+[2026-05-03T08:49:09.760140436Z] Epoch 22/36 | loss=0.0056 | val_auc(soundscape)=1.0000 | lr=0.000127
+[2026-05-03T08:49:09.760383812Z] 
+[2026-05-03T08:49:09.760546903Z] --- Epoch 23/36 ---
+[2026-05-03T08:49:12.759279799Z]   [train] batch 0/138 | loss=0.0180
+[2026-05-03T08:50:42.759327081Z]   [train] batch 100/138 | loss=0.0013
+[2026-05-03T08:51:11.759339156Z]   Validating on soundscape data...
+[2026-05-03T08:51:12.760187289Z] Epoch 23/36 | loss=0.0050 | val_auc(soundscape)=1.0000 | lr=0.000104
+[2026-05-03T08:51:12.760424546Z] 
+[2026-05-03T08:51:12.760616721Z] --- Epoch 24/36 ---
+[2026-05-03T08:51:16.760854269Z]   [train] batch 0/138 | loss=0.0079
+[2026-05-03T08:52:47.759351130Z]   [train] batch 100/138 | loss=0.0012
+[2026-05-03T08:53:18.760065009Z]   Validating on soundscape data...
+[2026-05-03T08:53:18.760282515Z] Epoch 24/36 | loss=0.0049 | val_auc(soundscape)=1.0000 | lr=0.000083
+[2026-05-03T08:53:18.760544146Z] 
+[2026-05-03T08:53:18.760720926Z] --- Epoch 25/36 ---
+[2026-05-03T08:53:22.760769151Z]   [train] batch 0/138 | loss=0.0016
+[2026-05-03T08:54:55.774748491Z]   [train] batch 100/138 | loss=0.0170
+[2026-05-03T08:55:24.760678964Z]   Validating on soundscape data...
+[2026-05-03T08:55:24.760836945Z] Epoch 25/36 | loss=0.0057 | val_auc(soundscape)=1.0000 | lr=0.000063
+[2026-05-03T08:55:24.761022781Z]   Per-taxon AUC:
+[2026-05-03T08:55:24.761213155Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T08:55:24.761398386Z] 
+[2026-05-03T08:55:24.761491726Z] --- Epoch 26/36 ---
+[2026-05-03T08:55:28.761572471Z]   [train] batch 0/138 | loss=0.0014
+[2026-05-03T08:56:59.760184330Z]   [train] batch 100/138 | loss=0.0014
+[2026-05-03T08:57:28.760325466Z]   Validating on soundscape data...
+[2026-05-03T08:57:29.759833403Z] Epoch 26/36 | loss=0.0045 | val_auc(soundscape)=1.0000 | lr=0.000045
+[2026-05-03T08:57:29.760209187Z] 
+[2026-05-03T08:57:29.760457637Z] --- Epoch 27/36 ---
+[2026-05-03T08:57:33.759293422Z]   [train] batch 0/138 | loss=0.0011
+[2026-05-03T08:59:03.759463648Z]   [train] batch 100/138 | loss=0.0009
+[2026-05-03T08:59:32.759798529Z]   Validating on soundscape data...
+[2026-05-03T08:59:32.759978782Z] Epoch 27/36 | loss=0.0043 | val_auc(soundscape)=1.0000 | lr=0.000030
+[2026-05-03T08:59:32.760210453Z] 
+[2026-05-03T08:59:32.760410008Z] --- Epoch 28/36 ---
+[2026-05-03T08:59:36.759394256Z]   [train] batch 0/138 | loss=0.0017
+[2026-05-03T09:01:06.759862838Z]   [train] batch 100/138 | loss=0.0164
+[2026-05-03T09:01:34.759715029Z]   Validating on soundscape data...
+[2026-05-03T09:01:35.759503580Z] Epoch 28/36 | loss=0.0038 | val_auc(soundscape)=1.0000 | lr=0.000017
+[2026-05-03T09:01:35.759713579Z] 
+[2026-05-03T09:01:35.759926439Z] --- Epoch 29/36 ---
+[2026-05-03T09:01:39.759882317Z]   [train] batch 0/138 | loss=0.0013
+[2026-05-03T09:03:10.759912779Z]   [train] batch 100/138 | loss=0.0010
+[2026-05-03T09:03:41.759605314Z]   Validating on soundscape data...
+[2026-05-03T09:03:41.759770190Z] Epoch 29/36 | loss=0.0050 | val_auc(soundscape)=1.0000 | lr=0.000008
+[2026-05-03T09:03:41.759957926Z] 
+[2026-05-03T09:03:41.760119363Z] --- Epoch 30/36 ---
+[2026-05-03T09:03:46.760118256Z]   [train] batch 0/138 | loss=0.0071
+[2026-05-03T09:05:19.760542988Z]   [train] batch 100/138 | loss=0.0104
+[2026-05-03T09:05:49.759962163Z]   Validating on soundscape data...
+[2026-05-03T09:05:50.760395052Z] Epoch 30/36 | loss=0.0042 | val_auc(soundscape)=1.0000 | lr=0.000003
+[2026-05-03T09:05:50.760515532Z]   Per-taxon AUC:
+[2026-05-03T09:05:50.760631634Z]     Amphibia: 1.0000 (6 species)
+[2026-05-03T09:05:50.760750930Z] 
+[2026-05-03T09:05:50.760886548Z] --- Epoch 31/36 ---
+[2026-05-03T09:05:54.762938404Z]   [train] batch 0/138 | loss=0.0009
+[2026-05-03T09:07:28.761151686Z]   [train] batch 100/138 | loss=0.0014
+[2026-05-03T09:07:58.761586188Z]   Validating on soundscape data...
+[2026-05-03T09:07:58.761775040Z] Epoch 31/36 | loss=0.0060 | val_auc(soundscape)=1.0000 | lr=0.000300
+[2026-05-03T09:07:58.762000855Z] 
+[2026-05-03T09:07:58.762214293Z] --- Epoch 32/36 ---
+[2026-05-03T09:08:03.759829890Z]   [train] batch 0/138 | loss=0.0168
+[2026-05-03T09:09:37.760077444Z]   [train] batch 100/138 | loss=0.0020
+[2026-05-03T09:10:08.759939127Z]   Validating on soundscape data...
+[2026-05-03T09:10:08.760160201Z] Epoch 32/36 | loss=0.0074 | val_auc(soundscape)=1.0000 | lr=0.000300
+[2026-05-03T09:10:08.760350487Z] 
+[2026-05-03T09:10:08.760535541Z] --- Epoch 33/36 ---
+[2026-05-03T09:10:13.760703993Z]   [train] batch 0/138 | loss=0.0016
+[2026-05-03T09:11:47.759845015Z]   [train] batch 100/138 | loss=0.0011
+[2026-05-03T09:12:17.759502955Z]   Validating on soundscape data...
+[2026-05-03T09:12:18.760166568Z] Epoch 33/36 | loss=0.0064 | val_auc(soundscape)=1.0000 | lr=0.000298
+[2026-05-03T09:12:18.760455220Z] 
+[2026-05-03T09:12:18.760626465Z] --- Epoch 34/36 ---
+[2026-05-03T09:12:22.760030847Z]   [train] batch 0/138 | loss=0.0011
+[2026-05-03T09:13:57.759901179Z]   [train] batch 100/138 | loss=0.0012
+[2026-05-03T09:14:26.759058986Z]   Validating on soundscape data...
+[2026-05-03T09:14:27.759722683Z] Epoch 34/36 | loss=0.0049 | val_auc(soundscape)=1.0000 | lr=0.000296
+[2026-05-03T09:14:27.759941957Z] 
+[2026-05-03T09:14:27.760166170Z] --- Epoch 35/36 ---
+[2026-05-03T09:14:31.760713900Z]   [train] batch 0/138 | loss=0.0015
+[2026-05-03T09:16:05.759749994Z]   [train] batch 100/138 | loss=0.0026
+[2026-05-03T09:16:35.759547147Z]   Validating on soundscape data...
+[2026-05-03T09:16:36.760500115Z] Epoch 35/36 | loss=0.0061 | val_auc(soundscape)=0.8300 | lr=0.000293
+[2026-05-03T09:16:36.760655795Z]   Per-taxon AUC:
+[2026-05-03T09:16:36.760831529Z]     Amphibia: 0.8300 (6 species)
+[2026-05-03T09:16:36.761025080Z] 
+[2026-05-03T09:16:36.761292543Z] --- Epoch 36/36 ---
+[2026-05-03T09:16:40.760181145Z]   [train] batch 0/138 | loss=0.0027
+[2026-05-03T09:18:12.759848184Z]   [train] batch 100/138 | loss=0.0197
+[2026-05-03T09:18:42.759157235Z]   Validating on soundscape data...
+[2026-05-03T09:18:43.762223878Z] Epoch 36/36 | loss=0.0052 | val_auc(soundscape)=1.0000 | lr=0.000289
+[2026-05-03T09:18:43.762494726Z] Saved final model: checkpoints/last_v4_v2s_full_melmix.pt
+[2026-05-03T09:18:43.762730918Z] 
+[2026-05-03T09:18:43.762979339Z] Best soundscape validation AUC: 1.0000
+[2026-05-03T09:18:43.763252565Z] Export with: python -m src.export_onnx --checkpoint best_v4_v2s_full_melmix.pt --backbone tf_efficientnetv2_s.in21k_ft_in1k

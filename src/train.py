@@ -1007,8 +1007,11 @@ def main():
         torch.save(raw_model.state_dict(), final_path)
         print(f"Saved final model: {final_path}")
         print(f"\nBest soundscape validation AUC: {best_auc:.4f}")
-        print(f"Export with: python -m src.export_onnx --checkpoint best_{args.save_tag}.pt "
-              f"--backbone {model_name}")
+        export_ckpt = f"last_{args.save_tag}.pt" if args.train_all_soundscapes else f"best_{args.save_tag}.pt"
+        if args.train_all_soundscapes:
+            print("Validation was leaky; export the final checkpoint, not the best-validation checkpoint.")
+        print(f"Export with: python -m src.export_onnx --checkpoint {export_ckpt} "
+              f"--backbone {args.backbone}")
 
     cleanup_ddp()
 

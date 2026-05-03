@@ -139,3 +139,39 @@ Interpretation:
 Code change after this run:
 - `split_soundscape_by_site` no longer takes the first random legal sites. For small site counts, it exhaustively searches site combinations, keeps training label coverage, targets the requested validation segment ratio, and then maximizes validation label coverage.
 - On the current labels, this should avoid the degenerate `S03+S18` Amphibia-only split.
+
+## Full Soundscape Teacher — 2026-05-03 17:18 CST
+
+Command completed:
+
+```bash
+torchrun --standalone --nproc_per_node=8 -m src.train \
+  --backbone v2s --epochs 36 --batch_size 128 --lr 3e-4 \
+  --precomputed --precomputed_mixup_prob 0.3 \
+  --train_all_soundscapes --num_workers 4 --save_tag v4_v2s_full_melmix
+```
+
+Configuration:
+- DDP: `world_size=8`, backend `nccl`.
+- `--train_all_soundscapes=True`, so validation is intentionally leaky and only monitors training health.
+- Train domains: focal 106,647, soundscape 35,472.
+- Train species: 234.
+- Validation monitor: 78 segments, 6 Amphibia species.
+
+Result:
+- Training completed 36 epochs.
+- Validation monitor reached 1.0000 from epoch 5 onward except epoch 35, confirming leakage/memorization rather than generalization.
+- Final checkpoint saved as `checkpoints/last_v4_v2s_full_melmix.pt`.
+- `checkpoints/best_v4_v2s_full_melmix.pt` also exists, but should not be used for final export because it was selected by leaky validation.
+
+Decision:
+- Use `last_v4_v2s_full_melmix.pt` as the v2s full-data teacher/checkpoint.
+- Export command:
+
+```bash
+python -m src.export_onnx --checkpoint last_v4_v2s_full_melmix.pt \
+  --backbone v2s --output model_v2s_full_melmix.onnx
+```
+
+Code change after this run:
+- `src/train.py` now prints `last_*` as the export checkpoint when `--train_all_soundscapes` is set, instead of misleadingly suggesting `best_*`.
