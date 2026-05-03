@@ -69,7 +69,10 @@ torchrun --standalone --nproc_per_node=8 -m src.train \
 
 ### Quick LB check: export best single model and submit
 ```bash
-python -m src.export_onnx --checkpoint best_v4_v2s.pt --backbone v2s --output model_v2s.onnx
+python -m src.export_onnx \
+    --checkpoint last_v4_v2s_full_melmix.pt \
+    --backbone v2s \
+    --output model_v2s_full_melmix.onnx
 ```
 
 ---

@@ -205,3 +205,27 @@ python -m src.export_onnx \
   --backbone v2s \
   --output model_v2s_full_melmix.onnx
 ```
+
+## ONNX Export Success — 2026-05-03
+
+Export succeeded:
+
+```bash
+python -m src.export_onnx \
+  --checkpoint last_v4_v2s_full_melmix.pt \
+  --backbone v2s \
+  --output model_v2s_full_melmix.onnx
+```
+
+Result:
+- Loaded checkpoint: `checkpoints/last_v4_v2s_full_melmix.pt`.
+- Exported ONNX: `checkpoints/model_v2s_full_melmix.onnx`.
+- Output shape: `(1, 234)`.
+- File size: 81.8 MB.
+- PyTorch vs ONNX max diff: `0.000003`.
+- Status: OK.
+
+Decision:
+- This ONNX is valid for a single-model leaderboard smoke submission.
+- Root `inference.py` discovers all non-specialist `.onnx` files in the model dataset directory, so this filename is acceptable.
+- For a clean single-model smoke test, upload only `model_v2s_full_melmix.onnx` in the attached model dataset.
