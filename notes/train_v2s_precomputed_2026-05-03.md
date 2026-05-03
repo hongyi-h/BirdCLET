@@ -106,3 +106,36 @@ Decision: do not remove `--precomputed_mixup_prob` to make the old code run. Syn
 ```bash
 python -m src.train --help | grep -E 'precomputed_mixup_prob|train_all_soundscapes|val_ratio'
 ```
+
+## Mel Mixup Relaunch — 2026-05-03 15:30 CST
+
+Command completed:
+
+```bash
+torchrun --standalone --nproc_per_node=8 -m src.train \
+  --backbone v2s --epochs 40 --batch_size 128 --lr 3e-4 \
+  --precomputed --precomputed_mixup_prob 0.3 \
+  --num_workers 4 --save_tag v4_v2s_melmix
+```
+
+Configuration:
+- DDP: `world_size=8`, backend `nccl`.
+- `--precomputed`, `--precomputed_mixup_prob 0.3`.
+- Split: train 1,400 soundscape segments, validation 78 segments from sites `S03`, `S18`.
+- Train species: 234.
+- Validation evaluable species: 6, all Amphibia.
+
+Result:
+- Training completed all 40 epochs.
+- Best validation AUC: 0.9044 at epoch 15, saved as `checkpoints/best_v4_v2s_melmix.pt`.
+- Final epoch AUC: 0.7436.
+- Final checkpoint saved as `checkpoints/last_v4_v2s_melmix.pt`.
+
+Interpretation:
+- Mel mixup did not break training.
+- The 0.9044 CV number is not comparable to previous runs because the validation split is only 78 segments and one taxon.
+- The important win is that training now covers all 234 taxonomy classes. The important remaining problem is validation representativeness.
+
+Code change after this run:
+- `split_soundscape_by_site` no longer takes the first random legal sites. For small site counts, it exhaustively searches site combinations, keeps training label coverage, targets the requested validation segment ratio, and then maximizes validation label coverage.
+- On the current labels, this should avoid the degenerate `S03+S18` Amphibia-only split.

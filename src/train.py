@@ -12,6 +12,7 @@ import argparse
 import random
 import glob
 import math
+import itertools
 import numpy as np
 import pandas as pd
 import torch
@@ -517,10 +518,51 @@ def split_soundscape_by_site(entries, val_ratio=0.3, protect_train_labels=True):
         sites.setdefault(site, []).append(e)
 
     site_list = sorted(sites.keys())
-    random.shuffle(site_list)
     target_val_count = max(1, int(len(site_list) * val_ratio))
+    target_val_segments = max(1, int(len(entries) * val_ratio))
 
-    if protect_train_labels:
+    def site_label_counts(site_names):
+        counts = {}
+        for site_name in site_names:
+            for label, count in count_entry_labels(sites[site_name]).items():
+                counts[label] = counts.get(label, 0) + count
+        return counts
+
+    def valid_val_sites(site_names, total_counts):
+        if not protect_train_labels:
+            return True
+        val_counts = site_label_counts(site_names)
+        return all(
+            total_counts.get(label, 0) - val_counts.get(label, 0) > 0
+            for label in total_counts
+        )
+
+    if len(site_list) <= 20:
+        total_counts = count_entry_labels(entries)
+        best = None
+        for r in range(1, len(site_list)):
+            for combo in itertools.combinations(site_list, r):
+                if not valid_val_sites(combo, total_counts):
+                    continue
+                val_segment_count = sum(len(sites[site]) for site in combo)
+                val_label_count = len(site_label_counts(combo))
+                score = (
+                    -abs(val_segment_count - target_val_segments),
+                    val_label_count,
+                    -abs(len(combo) - target_val_count),
+                    -len(combo),
+                )
+                if best is None or score > best[0]:
+                    best = (score, set(combo))
+        if best is not None:
+            val_sites = best[1]
+        else:
+            val_sites = set()
+    else:
+        val_sites = set()
+
+    if not val_sites and protect_train_labels:
+        random.shuffle(site_list)
         remaining_counts = count_entry_labels(entries)
         val_sites = set()
         for site in site_list:
@@ -538,7 +580,8 @@ def split_soundscape_by_site(entries, val_ratio=0.3, protect_train_labels=True):
                 remaining_counts[label] -= count
         if not val_sites:
             val_sites = set(site_list[:target_val_count])
-    else:
+    elif not val_sites:
+        random.shuffle(site_list)
         val_sites = set(site_list[:target_val_count])
 
     train_entries, val_entries = [], []

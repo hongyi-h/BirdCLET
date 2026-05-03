@@ -1,425 +1,319 @@
-[2026-05-02T17:05:34.775526206Z] W0503 01:05:33.955000 1 site-packages/torch/distributed/run.py:774] 
-[2026-05-02T17:05:34.775706363Z] W0503 01:05:33.955000 1 site-packages/torch/distributed/run.py:774] *****************************************
-[2026-05-02T17:05:34.775853675Z] W0503 01:05:33.955000 1 site-packages/torch/distributed/run.py:774] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
-[2026-05-02T17:05:34.776013800Z] W0503 01:05:33.955000 1 site-packages/torch/distributed/run.py:774] *****************************************
-[2026-05-02T17:06:43.760748158Z] DDP initialized: world_size=8, backend=nccl
-[2026-05-02T17:06:43.760949042Z] Device: cuda:0 | World size: 8
-[2026-05-02T17:06:43.761151884Z] Config: backbone=v2s, epochs=40, bs=128x8=1024, lr=0.0003, pseudo=False, precomputed=True
-[2026-05-02T17:12:17.761060225Z] Precomputed focal: 106647, soundscape: 1478
-[2026-05-02T17:12:17.761275448Z] SC train: 1358, SC val: 120 (sites: {'S13', 'S19'})
-[2026-05-02T17:12:17.761493277Z] Total train: 141955, val: 120
-[2026-05-02T17:12:17.761691621Z] Train domains: {'focal': 106647, 'soundscape': 35308}
-[2026-05-02T17:12:17.761889855Z] Train species: 230, val evaluable species upper bound: 22
-[2026-05-02T17:12:17.762073646Z] Loading model: tf_efficientnetv2_s.in21k_ft_in1k
-[2026-05-02T17:12:21.760362152Z] Model params: 20.5M
-[2026-05-02T17:12:21.760580172Z] 
-[2026-05-02T17:12:21.760780766Z] --- Epoch 1/40 ---
-[2026-05-02T17:14:32.767111173Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.767365497Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.767527025Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.767771852Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.767952179Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.768208119Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.768414250Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.768633781Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.768908631Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.769128086Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.769347606Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.769566430Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.769798939Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Attempting to run cuBLAS, but there was no current CUDA context! Attempting to set the primary context... (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:183.)
-[2026-05-02T17:14:32.769988043Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.770163038Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.770387268Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.770645240Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.770858107Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.771126580Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.771445116Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.771649074Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.771872092Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.772121758Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.772328613Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.772546239Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.772811023Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.773056985Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.773247049Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.773442291Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.773636809Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.773832528Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
-[2026-05-02T17:14:32.774020783Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
-[2026-05-02T17:14:32.774290152Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
-[2026-05-02T17:14:32.774470450Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-[2026-05-02T17:14:32.774741602Z]   [train] batch 0/138 | loss=0.2015
-[2026-05-02T17:15:44.759760578Z]   [train] batch 100/138 | loss=0.0055
-[2026-05-02T17:16:13.762851261Z]   Validating on soundscape data...
-[2026-05-02T17:16:13.763091781Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.763298170Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.763494773Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.763713314Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.763878573Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.764052223Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.764203872Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.764372836Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.764546736Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.764672297Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.764826185Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.764953992Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:13.765132577Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:13.765292265Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:43.761585272Z] Epoch 1/40 | loss=0.0136 | val_auc(soundscape)=0.5082 | lr=0.000300
-[2026-05-02T17:16:43.761777246Z]   -> Saved best model (AUC=0.5082)
-[2026-05-02T17:16:43.761967793Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:16:43.762147456Z]   warnings.warn(  # warn only once
-[2026-05-02T17:16:43.762402050Z] 
-[2026-05-02T17:16:43.762620723Z] --- Epoch 2/40 ---
-[2026-05-02T17:16:47.760101778Z]   [train] batch 0/138 | loss=0.0055
-[2026-05-02T17:18:17.760451314Z]   [train] batch 100/138 | loss=0.0044
-[2026-05-02T17:18:47.761688858Z]   Validating on soundscape data...
-[2026-05-02T17:18:47.761915501Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:18:47.762206697Z]   warnings.warn(  # warn only once
-[2026-05-02T17:18:47.762388317Z] Epoch 2/40 | loss=0.0048 | val_auc(soundscape)=0.4693 | lr=0.000293
-[2026-05-02T17:18:47.762581201Z] 
-[2026-05-02T17:18:47.762775844Z] --- Epoch 3/40 ---
-[2026-05-02T17:18:51.760154950Z]   [train] batch 0/138 | loss=0.0041
-[2026-05-02T17:20:22.760742189Z]   [train] batch 100/138 | loss=0.0033
-[2026-05-02T17:20:52.760473249Z]   Validating on soundscape data...
-[2026-05-02T17:20:53.761050524Z] Epoch 3/40 | loss=0.0037 | val_auc(soundscape)=0.4998 | lr=0.000271
-[2026-05-02T17:20:53.761307760Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:20:53.761486607Z]   warnings.warn(  # warn only once
-[2026-05-02T17:20:53.761708275Z] 
-[2026-05-02T17:20:53.761872049Z] --- Epoch 4/40 ---
-[2026-05-02T17:20:57.760071661Z]   [train] batch 0/138 | loss=0.0033
-[2026-05-02T17:22:26.760360078Z]   [train] batch 100/138 | loss=0.0031
-[2026-05-02T17:22:55.760566188Z]   Validating on soundscape data...
-[2026-05-02T17:22:56.761140676Z] Epoch 4/40 | loss=0.0029 | val_auc(soundscape)=0.4995 | lr=0.000238
-[2026-05-02T17:22:56.761355702Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:22:56.761537777Z]   warnings.warn(  # warn only once
-[2026-05-02T17:22:56.761757675Z] 
-[2026-05-02T17:22:56.761938239Z] --- Epoch 5/40 ---
-[2026-05-02T17:23:00.759994968Z]   [train] batch 0/138 | loss=0.0026
-[2026-05-02T17:24:29.759732254Z]   [train] batch 100/138 | loss=0.0021
-[2026-05-02T17:24:59.760089043Z]   Validating on soundscape data...
-[2026-05-02T17:25:00.761477307Z] Epoch 5/40 | loss=0.0024 | val_auc(soundscape)=0.5207 | lr=0.000197
-[2026-05-02T17:25:00.761701323Z]   -> Saved best model (AUC=0.5207)
-[2026-05-02T17:25:00.761876057Z]   Per-taxon AUC:
-[2026-05-02T17:25:00.762024680Z]     Amphibia: 0.5402 (12 species)
-[2026-05-02T17:25:00.762169868Z]     Aves: 0.2712 (1 species)
-[2026-05-02T17:25:00.762394758Z]     Insecta: 0.5224 (9 species)
-[2026-05-02T17:25:00.762622817Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:25:00.762832743Z]   warnings.warn(  # warn only once
-[2026-05-02T17:25:00.763080899Z] 
-[2026-05-02T17:25:00.763303299Z] --- Epoch 6/40 ---
-[2026-05-02T17:25:04.760744816Z]   [train] batch 0/138 | loss=0.0025
-[2026-05-02T17:26:33.760147051Z]   [train] batch 100/138 | loss=0.0031
-[2026-05-02T17:27:01.761417877Z]   Validating on soundscape data...
-[2026-05-02T17:27:02.761009258Z] Epoch 6/40 | loss=0.0021 | val_auc(soundscape)=0.5382 | lr=0.000150
-[2026-05-02T17:27:02.761174673Z]   -> Saved best model (AUC=0.5382)
-[2026-05-02T17:27:02.761453197Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:27:02.761692092Z]   warnings.warn(  # warn only once
-[2026-05-02T17:27:02.761875275Z] 
-[2026-05-02T17:27:02.762044000Z] --- Epoch 7/40 ---
-[2026-05-02T17:27:06.760433888Z]   [train] batch 0/138 | loss=0.0018
-[2026-05-02T17:28:35.760470441Z]   [train] batch 100/138 | loss=0.0018
-[2026-05-02T17:29:05.760224230Z]   Validating on soundscape data...
-[2026-05-02T17:29:06.760395685Z] Epoch 7/40 | loss=0.0019 | val_auc(soundscape)=0.5309 | lr=0.000104
-[2026-05-02T17:29:06.760570743Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:29:06.760750856Z]   warnings.warn(  # warn only once
-[2026-05-02T17:29:06.760988833Z] 
-[2026-05-02T17:29:06.761173055Z] --- Epoch 8/40 ---
-[2026-05-02T17:29:10.760423479Z]   [train] batch 0/138 | loss=0.0017
-[2026-05-02T17:30:38.760382401Z]   [train] batch 100/138 | loss=0.0017
-[2026-05-02T17:31:08.759767393Z]   Validating on soundscape data...
-[2026-05-02T17:31:09.761487754Z] Epoch 8/40 | loss=0.0018 | val_auc(soundscape)=0.5160 | lr=0.000063
-[2026-05-02T17:31:09.761751367Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:31:09.761980312Z]   warnings.warn(  # warn only once
-[2026-05-02T17:31:09.762222596Z] 
-[2026-05-02T17:31:09.762464621Z] --- Epoch 9/40 ---
-[2026-05-02T17:31:13.760557774Z]   [train] batch 0/138 | loss=0.0016
-[2026-05-02T17:32:41.760492486Z]   [train] batch 100/138 | loss=0.0014
-[2026-05-02T17:33:11.759990501Z]   Validating on soundscape data...
-[2026-05-02T17:33:12.760842331Z] Epoch 9/40 | loss=0.0017 | val_auc(soundscape)=0.5256 | lr=0.000030
-[2026-05-02T17:33:12.760990970Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:33:12.761149144Z]   warnings.warn(  # warn only once
-[2026-05-02T17:33:12.761303331Z] 
-[2026-05-02T17:33:12.761438614Z] --- Epoch 10/40 ---
-[2026-05-02T17:33:16.761057733Z]   [train] batch 0/138 | loss=0.0019
-[2026-05-02T17:34:45.760250703Z]   [train] batch 100/138 | loss=0.0012
-[2026-05-02T17:35:14.759991206Z]   Validating on soundscape data...
-[2026-05-02T17:35:15.762013645Z] Epoch 10/40 | loss=0.0017 | val_auc(soundscape)=0.5366 | lr=0.000008
-[2026-05-02T17:35:15.762201377Z]   Per-taxon AUC:
-[2026-05-02T17:35:15.762337084Z]     Amphibia: 0.5608 (12 species)
-[2026-05-02T17:35:15.762493511Z]     Aves: 0.2373 (1 species)
-[2026-05-02T17:35:15.762629061Z]     Insecta: 0.5378 (9 species)
-[2026-05-02T17:35:15.762770251Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:35:15.762914314Z]   warnings.warn(  # warn only once
-[2026-05-02T17:35:15.763083839Z] 
-[2026-05-02T17:35:15.763243055Z] --- Epoch 11/40 ---
-[2026-05-02T17:35:18.759564390Z]   [train] batch 0/138 | loss=0.0013
-[2026-05-02T17:36:50.760774838Z]   [train] batch 100/138 | loss=0.0017
-[2026-05-02T17:37:20.759850434Z]   Validating on soundscape data...
-[2026-05-02T17:37:21.760178254Z] Epoch 11/40 | loss=0.0017 | val_auc(soundscape)=0.6219 | lr=0.000300
-[2026-05-02T17:37:22.761355540Z]   -> Saved best model (AUC=0.6219)
-[2026-05-02T17:37:22.761522050Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:37:22.761687714Z]   warnings.warn(  # warn only once
-[2026-05-02T17:37:22.761832022Z] 
-[2026-05-02T17:37:22.762026180Z] --- Epoch 12/40 ---
-[2026-05-02T17:37:25.760028135Z]   [train] batch 0/138 | loss=0.0013
-[2026-05-02T17:38:55.760759401Z]   [train] batch 100/138 | loss=0.0018
-[2026-05-02T17:39:23.760057458Z]   Validating on soundscape data...
-[2026-05-02T17:39:24.761094263Z] Epoch 12/40 | loss=0.0016 | val_auc(soundscape)=0.5642 | lr=0.000298
-[2026-05-02T17:39:24.761235739Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:39:24.761445114Z]   warnings.warn(  # warn only once
-[2026-05-02T17:39:24.761687050Z] 
-[2026-05-02T17:39:24.761914504Z] --- Epoch 13/40 ---
-[2026-05-02T17:39:28.760650968Z]   [train] batch 0/138 | loss=0.0013
-[2026-05-02T17:40:59.760039016Z]   [train] batch 100/138 | loss=0.0023
-[2026-05-02T17:41:28.760467260Z]   Validating on soundscape data...
-[2026-05-02T17:41:29.760707271Z] Epoch 13/40 | loss=0.0013 | val_auc(soundscape)=0.5718 | lr=0.000293
-[2026-05-02T17:41:29.760900151Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:41:29.761098641Z]   warnings.warn(  # warn only once
-[2026-05-02T17:41:29.761393271Z] 
-[2026-05-02T17:41:29.761589122Z] --- Epoch 14/40 ---
-[2026-05-02T17:41:33.760536531Z]   [train] batch 0/138 | loss=0.0009
-[2026-05-02T17:43:02.760591853Z]   [train] batch 100/138 | loss=0.0010
-[2026-05-02T17:43:32.760287393Z]   Validating on soundscape data...
-[2026-05-02T17:43:33.760814906Z] Epoch 14/40 | loss=0.0012 | val_auc(soundscape)=0.6156 | lr=0.000284
-[2026-05-02T17:43:33.761017819Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:43:33.761162767Z]   warnings.warn(  # warn only once
-[2026-05-02T17:43:33.761347361Z] 
-[2026-05-02T17:43:33.761511013Z] --- Epoch 15/40 ---
-[2026-05-02T17:43:37.760931063Z]   [train] batch 0/138 | loss=0.0009
-[2026-05-02T17:45:07.760007389Z]   [train] batch 100/138 | loss=0.0013
-[2026-05-02T17:45:37.760316688Z]   Validating on soundscape data...
-[2026-05-02T17:45:38.761502470Z] Epoch 15/40 | loss=0.0011 | val_auc(soundscape)=0.5717 | lr=0.000271
-[2026-05-02T17:45:38.761700246Z]   Per-taxon AUC:
-[2026-05-02T17:45:38.761926245Z]     Amphibia: 0.5644 (12 species)
-[2026-05-02T17:45:38.762065670Z]     Aves: 0.4576 (1 species)
-[2026-05-02T17:45:38.762261847Z]     Insecta: 0.5940 (9 species)
-[2026-05-02T17:45:38.762440918Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:45:38.762591884Z]   warnings.warn(  # warn only once
-[2026-05-02T17:45:38.762758598Z] 
-[2026-05-02T17:45:38.762895610Z] --- Epoch 16/40 ---
-[2026-05-02T17:45:41.760319600Z]   [train] batch 0/138 | loss=0.0013
-[2026-05-02T17:47:11.760611930Z]   [train] batch 100/138 | loss=0.0009
-[2026-05-02T17:47:41.760103746Z]   Validating on soundscape data...
-[2026-05-02T17:47:42.760828931Z] Epoch 16/40 | loss=0.0010 | val_auc(soundscape)=0.6693 | lr=0.000256
-[2026-05-02T17:47:42.761027778Z]   -> Saved best model (AUC=0.6693)
-[2026-05-02T17:47:42.761206594Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:47:42.761425720Z]   warnings.warn(  # warn only once
-[2026-05-02T17:47:42.761617346Z] 
-[2026-05-02T17:47:42.761817601Z] --- Epoch 17/40 ---
-[2026-05-02T17:47:46.760667377Z]   [train] batch 0/138 | loss=0.0009
-[2026-05-02T17:49:15.759737294Z]   [train] batch 100/138 | loss=0.0009
-[2026-05-02T17:49:45.759939650Z]   Validating on soundscape data...
-[2026-05-02T17:49:46.761744086Z] Epoch 17/40 | loss=0.0008 | val_auc(soundscape)=0.6228 | lr=0.000238
-[2026-05-02T17:49:46.761970005Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:49:46.762160994Z]   warnings.warn(  # warn only once
-[2026-05-02T17:49:46.762381434Z] 
-[2026-05-02T17:49:46.762533277Z] --- Epoch 18/40 ---
-[2026-05-02T17:49:50.759689454Z]   [train] batch 0/138 | loss=0.0012
-[2026-05-02T17:51:19.761211662Z]   [train] batch 100/138 | loss=0.0006
-[2026-05-02T17:51:48.759650533Z]   Validating on soundscape data...
-[2026-05-02T17:51:49.761731386Z] Epoch 18/40 | loss=0.0008 | val_auc(soundscape)=0.6485 | lr=0.000218
-[2026-05-02T17:51:49.761910756Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:51:49.762108021Z]   warnings.warn(  # warn only once
-[2026-05-02T17:51:49.762312581Z] 
-[2026-05-02T17:51:49.762489289Z] --- Epoch 19/40 ---
-[2026-05-02T17:51:53.759760965Z]   [train] batch 0/138 | loss=0.0009
-[2026-05-02T17:53:22.760675855Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T17:53:52.760181429Z]   Validating on soundscape data...
-[2026-05-02T17:53:53.760855787Z] Epoch 19/40 | loss=0.0007 | val_auc(soundscape)=0.6344 | lr=0.000197
-[2026-05-02T17:53:53.761043140Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:53:53.761236677Z]   warnings.warn(  # warn only once
-[2026-05-02T17:53:53.761398163Z] 
-[2026-05-02T17:53:53.761576832Z] --- Epoch 20/40 ---
-[2026-05-02T17:53:56.759726101Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T17:55:25.760614909Z]   [train] batch 100/138 | loss=0.0006
-[2026-05-02T17:55:55.760094412Z]   Validating on soundscape data...
-[2026-05-02T17:55:56.761984150Z] Epoch 20/40 | loss=0.0007 | val_auc(soundscape)=0.6664 | lr=0.000174
-[2026-05-02T17:55:56.762185387Z]   Per-taxon AUC:
-[2026-05-02T17:55:56.762352858Z]     Amphibia: 0.6628 (12 species)
-[2026-05-02T17:55:56.762525142Z]     Aves: 0.5593 (1 species)
-[2026-05-02T17:55:56.762666968Z]     Insecta: 0.6830 (9 species)
-[2026-05-02T17:55:56.762912755Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:55:56.763140401Z]   warnings.warn(  # warn only once
-[2026-05-02T17:55:56.763329662Z] 
-[2026-05-02T17:55:56.763498225Z] --- Epoch 21/40 ---
-[2026-05-02T17:56:00.760160805Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T17:57:30.759827122Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T17:57:59.760035728Z]   Validating on soundscape data...
-[2026-05-02T17:58:00.760576220Z] Epoch 21/40 | loss=0.0006 | val_auc(soundscape)=0.6399 | lr=0.000150
-[2026-05-02T17:58:00.760910713Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T17:58:00.761149594Z]   warnings.warn(  # warn only once
-[2026-05-02T17:58:00.761351026Z] 
-[2026-05-02T17:58:00.761629238Z] --- Epoch 22/40 ---
-[2026-05-02T17:58:05.760598784Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T17:59:33.760230138Z]   [train] batch 100/138 | loss=0.0007
-[2026-05-02T18:00:03.760166095Z]   Validating on soundscape data...
-[2026-05-02T18:00:04.761087871Z] Epoch 22/40 | loss=0.0006 | val_auc(soundscape)=0.6361 | lr=0.000127
-[2026-05-02T18:00:04.761273464Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:00:04.761538284Z]   warnings.warn(  # warn only once
-[2026-05-02T18:00:04.761715716Z] 
-[2026-05-02T18:00:04.761913084Z] --- Epoch 23/40 ---
-[2026-05-02T18:00:08.760231338Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T18:01:36.760699510Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:02:06.760241918Z]   Validating on soundscape data...
-[2026-05-02T18:02:07.761366682Z] Epoch 23/40 | loss=0.0005 | val_auc(soundscape)=0.6294 | lr=0.000104
-[2026-05-02T18:02:07.761552658Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:02:07.761732042Z]   warnings.warn(  # warn only once
-[2026-05-02T18:02:07.761922595Z] 
-[2026-05-02T18:02:07.762087978Z] --- Epoch 24/40 ---
-[2026-05-02T18:02:11.760324996Z]   [train] batch 0/138 | loss=0.0004
-[2026-05-02T18:03:40.760847451Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T18:04:10.761180453Z]   Validating on soundscape data...
-[2026-05-02T18:04:10.761349034Z] Epoch 24/40 | loss=0.0005 | val_auc(soundscape)=0.6116 | lr=0.000083
-[2026-05-02T18:04:10.761509207Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:04:10.761678098Z]   warnings.warn(  # warn only once
-[2026-05-02T18:04:10.761835720Z] 
-[2026-05-02T18:04:10.761986844Z] --- Epoch 25/40 ---
-[2026-05-02T18:04:14.759833919Z]   [train] batch 0/138 | loss=0.0004
-[2026-05-02T18:05:43.774788605Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:06:12.760150178Z]   Validating on soundscape data...
-[2026-05-02T18:06:13.762358483Z] Epoch 25/40 | loss=0.0005 | val_auc(soundscape)=0.6360 | lr=0.000063
-[2026-05-02T18:06:13.762582463Z]   Per-taxon AUC:
-[2026-05-02T18:06:13.762790511Z]     Amphibia: 0.6110 (12 species)
-[2026-05-02T18:06:13.762948249Z]     Aves: 0.4746 (1 species)
-[2026-05-02T18:06:13.763159939Z]     Insecta: 0.6872 (9 species)
-[2026-05-02T18:06:13.763339377Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:06:13.763531651Z]   warnings.warn(  # warn only once
-[2026-05-02T18:06:13.763769417Z] 
-[2026-05-02T18:06:13.763933478Z] --- Epoch 26/40 ---
-[2026-05-02T18:06:17.760523864Z]   [train] batch 0/138 | loss=0.0004
-[2026-05-02T18:07:45.760401660Z]   [train] batch 100/138 | loss=0.0002
-[2026-05-02T18:08:15.760040690Z]   Validating on soundscape data...
-[2026-05-02T18:08:16.761296036Z] Epoch 26/40 | loss=0.0004 | val_auc(soundscape)=0.6685 | lr=0.000045
-[2026-05-02T18:08:16.761615891Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:08:16.761825754Z]   warnings.warn(  # warn only once
-[2026-05-02T18:08:16.762029938Z] 
-[2026-05-02T18:08:16.762177645Z] --- Epoch 27/40 ---
-[2026-05-02T18:08:20.759834476Z]   [train] batch 0/138 | loss=0.0003
-[2026-05-02T18:09:48.760007722Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T18:10:19.759994855Z]   Validating on soundscape data...
-[2026-05-02T18:10:20.761325100Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:10:20.761516299Z]   warnings.warn(  # warn only once
-[2026-05-02T18:10:20.761820524Z] Epoch 27/40 | loss=0.0004 | val_auc(soundscape)=0.6623 | lr=0.000030
-[2026-05-02T18:10:20.761981428Z] 
-[2026-05-02T18:10:20.762163777Z] --- Epoch 28/40 ---
-[2026-05-02T18:10:23.760693868Z]   [train] batch 0/138 | loss=0.0001
-[2026-05-02T18:11:52.760162477Z]   [train] batch 100/138 | loss=0.0002
-[2026-05-02T18:12:21.760071794Z]   Validating on soundscape data...
-[2026-05-02T18:12:22.760910160Z] Epoch 28/40 | loss=0.0004 | val_auc(soundscape)=0.6594 | lr=0.000017
-[2026-05-02T18:12:22.761131693Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:12:22.761392252Z]   warnings.warn(  # warn only once
-[2026-05-02T18:12:22.761630341Z] 
-[2026-05-02T18:12:22.761828780Z] --- Epoch 29/40 ---
-[2026-05-02T18:12:26.760302013Z]   [train] batch 0/138 | loss=0.0002
-[2026-05-02T18:13:56.760151889Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:14:25.760500862Z]   Validating on soundscape data...
-[2026-05-02T18:14:26.760468489Z] Epoch 29/40 | loss=0.0004 | val_auc(soundscape)=0.6616 | lr=0.000008
-[2026-05-02T18:14:26.760676579Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:14:26.760912340Z]   warnings.warn(  # warn only once
-[2026-05-02T18:14:26.761121825Z] 
-[2026-05-02T18:14:26.761691707Z] --- Epoch 30/40 ---
-[2026-05-02T18:14:30.760620615Z]   [train] batch 0/138 | loss=0.0003
-[2026-05-02T18:15:58.760098871Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:16:29.760384561Z]   Validating on soundscape data...
-[2026-05-02T18:16:30.762213077Z] Epoch 30/40 | loss=0.0004 | val_auc(soundscape)=0.6592 | lr=0.000003
-[2026-05-02T18:16:30.762393071Z]   Per-taxon AUC:
-[2026-05-02T18:16:30.762609929Z]     Amphibia: 0.6256 (12 species)
-[2026-05-02T18:16:30.762775446Z]     Aves: 0.4915 (1 species)
-[2026-05-02T18:16:30.762978944Z]     Insecta: 0.7225 (9 species)
-[2026-05-02T18:16:30.763157998Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:16:30.763311020Z]   warnings.warn(  # warn only once
-[2026-05-02T18:16:30.763498664Z] 
-[2026-05-02T18:16:30.763676361Z] --- Epoch 31/40 ---
-[2026-05-02T18:16:34.760729071Z]   [train] batch 0/138 | loss=0.0004
-[2026-05-02T18:18:04.760684629Z]   [train] batch 100/138 | loss=0.0010
-[2026-05-02T18:18:34.760949063Z]   Validating on soundscape data...
-[2026-05-02T18:18:35.761323062Z] Epoch 31/40 | loss=0.0007 | val_auc(soundscape)=0.6167 | lr=0.000300
-[2026-05-02T18:18:35.761491503Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:18:35.761694354Z]   warnings.warn(  # warn only once
-[2026-05-02T18:18:35.761871737Z] 
-[2026-05-02T18:18:35.762047084Z] --- Epoch 32/40 ---
-[2026-05-02T18:18:39.759805291Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T18:20:09.760168051Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T18:20:39.760109862Z]   Validating on soundscape data...
-[2026-05-02T18:20:40.760859725Z] Epoch 32/40 | loss=0.0007 | val_auc(soundscape)=0.7054 | lr=0.000300
-[2026-05-02T18:20:41.761158342Z]   -> Saved best model (AUC=0.7054)
-[2026-05-02T18:20:41.761376799Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:20:41.761550226Z]   warnings.warn(  # warn only once
-[2026-05-02T18:20:41.761741959Z] 
-[2026-05-02T18:20:41.761886092Z] --- Epoch 33/40 ---
-[2026-05-02T18:20:45.759824981Z]   [train] batch 0/138 | loss=0.0007
-[2026-05-02T18:22:15.760396767Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T18:22:45.759940699Z]   Validating on soundscape data...
-[2026-05-02T18:22:46.761590561Z] Epoch 33/40 | loss=0.0006 | val_auc(soundscape)=0.6814 | lr=0.000298
-[2026-05-02T18:22:46.761835245Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:22:46.762029490Z]   warnings.warn(  # warn only once
-[2026-05-02T18:22:46.762256428Z] 
-[2026-05-02T18:22:46.762434912Z] --- Epoch 34/40 ---
-[2026-05-02T18:22:50.759993199Z]   [train] batch 0/138 | loss=0.0008
-[2026-05-02T18:24:19.760582598Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:24:49.760208742Z]   Validating on soundscape data...
-[2026-05-02T18:24:50.759813672Z] Epoch 34/40 | loss=0.0005 | val_auc(soundscape)=0.7201 | lr=0.000296
-[2026-05-02T18:24:51.760669319Z]   -> Saved best model (AUC=0.7201)
-[2026-05-02T18:24:51.760984918Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:24:51.761174196Z]   warnings.warn(  # warn only once
-[2026-05-02T18:24:51.761409109Z] 
-[2026-05-02T18:24:51.761612590Z] --- Epoch 35/40 ---
-[2026-05-02T18:24:55.760262329Z]   [train] batch 0/138 | loss=0.0003
-[2026-05-02T18:26:25.760718290Z]   [train] batch 100/138 | loss=0.0004
-[2026-05-02T18:26:55.760598005Z]   Validating on soundscape data...
-[2026-05-02T18:26:56.761889183Z] Epoch 35/40 | loss=0.0005 | val_auc(soundscape)=0.6901 | lr=0.000293
-[2026-05-02T18:26:56.762082739Z]   Per-taxon AUC:
-[2026-05-02T18:26:56.762339038Z]     Amphibia: 0.6654 (12 species)
-[2026-05-02T18:26:56.762514354Z]     Aves: 0.5932 (1 species)
-[2026-05-02T18:26:56.762727641Z]     Insecta: 0.7339 (9 species)
-[2026-05-02T18:26:56.762927394Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:26:56.763129687Z]   warnings.warn(  # warn only once
-[2026-05-02T18:26:56.763346701Z] 
-[2026-05-02T18:26:56.763523731Z] --- Epoch 36/40 ---
-[2026-05-02T18:27:00.760164224Z]   [train] batch 0/138 | loss=0.0005
-[2026-05-02T18:28:30.760099824Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:29:00.759662138Z]   Validating on soundscape data...
-[2026-05-02T18:29:01.760212891Z] Epoch 36/40 | loss=0.0004 | val_auc(soundscape)=0.7362 | lr=0.000289
-[2026-05-02T18:29:02.761114003Z]   -> Saved best model (AUC=0.7362)
-[2026-05-02T18:29:02.761431323Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:29:02.761631028Z]   warnings.warn(  # warn only once
-[2026-05-02T18:29:02.761798048Z] 
-[2026-05-02T18:29:02.762009125Z] --- Epoch 37/40 ---
-[2026-05-02T18:29:06.760346194Z]   [train] batch 0/138 | loss=0.0002
-[2026-05-02T18:30:37.760686660Z]   [train] batch 100/138 | loss=0.0002
-[2026-05-02T18:31:06.760414775Z]   Validating on soundscape data...
-[2026-05-02T18:31:07.761325978Z] Epoch 37/40 | loss=0.0004 | val_auc(soundscape)=0.7183 | lr=0.000284
-[2026-05-02T18:31:07.761565009Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:31:07.761753796Z]   warnings.warn(  # warn only once
-[2026-05-02T18:31:07.761993319Z] 
-[2026-05-02T18:31:07.762166258Z] --- Epoch 38/40 ---
-[2026-05-02T18:31:10.761227031Z]   [train] batch 0/138 | loss=0.0003
-[2026-05-02T18:32:40.761234982Z]   [train] batch 100/138 | loss=0.0005
-[2026-05-02T18:33:10.760550552Z]   Validating on soundscape data...
-[2026-05-02T18:33:11.761473267Z] Epoch 38/40 | loss=0.0004 | val_auc(soundscape)=0.6904 | lr=0.000278
-[2026-05-02T18:33:11.761723078Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:33:11.761996345Z]   warnings.warn(  # warn only once
-[2026-05-02T18:33:11.762178281Z] 
-[2026-05-02T18:33:11.762590472Z] --- Epoch 39/40 ---
-[2026-05-02T18:33:15.760499988Z]   [train] batch 0/138 | loss=0.0011
-[2026-05-02T18:34:45.760561784Z]   [train] batch 100/138 | loss=0.0003
-[2026-05-02T18:35:14.760163362Z]   Validating on soundscape data...
-[2026-05-02T18:35:15.761298951Z] Epoch 39/40 | loss=0.0004 | val_auc(soundscape)=0.7179 | lr=0.000271
-[2026-05-02T18:35:15.761481442Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:35:15.761654516Z]   warnings.warn(  # warn only once
-[2026-05-02T18:35:15.761775328Z] 
-[2026-05-02T18:35:15.761952187Z] --- Epoch 40/40 ---
-[2026-05-02T18:35:19.760418090Z]   [train] batch 0/138 | loss=0.0002
-[2026-05-02T18:36:50.759564868Z]   [train] batch 100/138 | loss=0.0002
-[2026-05-02T18:37:20.760543577Z]   Validating on soundscape data...
-[2026-05-02T18:37:21.762454937Z] Epoch 40/40 | loss=0.0004 | val_auc(soundscape)=0.6680 | lr=0.000264
-[2026-05-02T18:37:21.762692939Z]   Per-taxon AUC:
-[2026-05-02T18:37:21.762984564Z]     Amphibia: 0.6544 (12 species)
-[2026-05-02T18:37:21.763203310Z]     Aves: 0.5254 (1 species)
-[2026-05-02T18:37:21.763483075Z]     Insecta: 0.7021 (9 species)
-[2026-05-02T18:37:21.763714525Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/distributed/distributed_c10d.py:5383: UserWarning: No device id is provided via `init_process_group` or `barrier `. Using the current device set by the user. 
-[2026-05-02T18:37:21.764099260Z]   warnings.warn(  # warn only once
-[2026-05-02T18:37:21.764419490Z] 
-[2026-05-02T18:37:21.764623760Z] Best soundscape validation AUC: 0.7362
-[2026-05-02T18:37:21.764862969Z] Export with: python -m src.export_onnx --checkpoint best_v4_v2s.pt --backbone tf_efficientnetv2_s.in21k_ft_in1k
+torchrun --standalone --nproc_per_node=8 -m src.train \
+  --backbone v2s --epochs 40 --batch_size 128 --lr 3e-4 \
+  --precomputed --precomputed_mixup_prob 0.3 \
+  --num_workers 4 --save_tag v4_v2s_melmix
+
+
+
+[2026-05-03T06:00:51.776953586Z] W0503 14:00:51.070000 1 site-packages/torch/distributed/run.py:774] 
+[2026-05-03T06:00:51.777090414Z] W0503 14:00:51.070000 1 site-packages/torch/distributed/run.py:774] *****************************************
+[2026-05-03T06:00:51.777260144Z] W0503 14:00:51.070000 1 site-packages/torch/distributed/run.py:774] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+[2026-05-03T06:00:51.777400150Z] W0503 14:00:51.070000 1 site-packages/torch/distributed/run.py:774] *****************************************
+[2026-05-03T06:02:15.760284537Z] DDP initialized: world_size=8, backend=nccl
+[2026-05-03T06:02:15.760522403Z] Device: cuda:0 | World size: 8
+[2026-05-03T06:02:15.760706012Z] Config: backbone=v2s, epochs=40, bs=128x8=1024, lr=0.0003, pseudo=False, precomputed=True, val_ratio=0.3, train_all_soundscapes=False
+[2026-05-03T06:07:55.760796223Z] Precomputed focal: 106647, soundscape: 1478
+[2026-05-03T06:07:55.760957563Z] SC train: 1400, SC val: 78 (sites: {'S03', 'S18'})
+[2026-05-03T06:07:55.761149701Z] Total train: 141647, val: 78
+[2026-05-03T06:07:55.761299583Z] Train domains: {'focal': 106647, 'soundscape': 35000}
+[2026-05-03T06:07:55.761459775Z] Train species: 234, val evaluable species upper bound: 6
+[2026-05-03T06:07:55.761596826Z] Loading model: tf_efficientnetv2_s.in21k_ft_in1k
+[2026-05-03T06:08:00.760284446Z] Model params: 20.5M
+[2026-05-03T06:08:00.760525092Z] 
+[2026-05-03T06:08:00.760727020Z] --- Epoch 1/40 ---
+[2026-05-03T06:10:08.766726576Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.766934074Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.767121402Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.767298968Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.767461055Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.767643173Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.767811564Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.767979972Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.768155050Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.768318405Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.768490572Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.768667530Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.768839300Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.769027956Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.769238088Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.769412365Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.769573193Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Attempting to run cuBLAS, but there was no current CUDA context! Attempting to set the primary context... (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:183.)
+[2026-05-03T06:10:08.769703637Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.769863040Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.770029531Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.770200014Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.770355639Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.770537126Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.770712994Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.770908074Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.771112125Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.771313742Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.771499646Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.771680038Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.771867492Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.772062408Z] /mnt/afs/zhengmingkai/miniconda3/envs/birdclef/lib/python3.12/site-packages/torch/autograd/graph.py:829: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+[2026-05-03T06:10:08.772249865Z] grad.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1, 1]
+[2026-05-03T06:10:08.772435933Z] bucket_view.sizes() = [64, 1536, 1, 1], strides() = [1536, 1, 1536, 1536] (Triggered internally at /workspace/framework/mcPytorch/torch/csrc/distributed/c10d/reducer.cpp:334.)
+[2026-05-03T06:10:08.772598049Z]   return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[2026-05-03T06:10:08.772790084Z]   [train] batch 0/138 | loss=0.2043
+[2026-05-03T06:11:23.760823179Z]   [train] batch 100/138 | loss=0.0095
+[2026-05-03T06:11:51.760363557Z]   Validating on soundscape data...
+[2026-05-03T06:12:20.761276733Z] Epoch 1/40 | loss=0.0210 | val_auc(soundscape)=0.7602 | lr=0.000300
+[2026-05-03T06:12:20.761547265Z]   -> Saved best model (AUC=0.7602)
+[2026-05-03T06:12:20.761735645Z] 
+[2026-05-03T06:12:20.761922439Z] --- Epoch 2/40 ---
+[2026-05-03T06:12:24.760223151Z]   [train] batch 0/138 | loss=0.0071
+[2026-05-03T06:13:48.760360814Z]   [train] batch 100/138 | loss=0.0062
+[2026-05-03T06:14:16.760424825Z]   Validating on soundscape data...
+[2026-05-03T06:14:17.761065921Z] Epoch 2/40 | loss=0.0118 | val_auc(soundscape)=0.7147 | lr=0.000293
+[2026-05-03T06:14:17.761318820Z] 
+[2026-05-03T06:14:17.761554023Z] --- Epoch 3/40 ---
+[2026-05-03T06:14:20.760234158Z]   [train] batch 0/138 | loss=0.0171
+[2026-05-03T06:15:45.760357855Z]   [train] batch 100/138 | loss=0.0048
+[2026-05-03T06:16:14.760539006Z]   Validating on soundscape data...
+[2026-05-03T06:16:15.760858271Z] Epoch 3/40 | loss=0.0099 | val_auc(soundscape)=0.7865 | lr=0.000271
+[2026-05-03T06:16:15.761070738Z]   -> Saved best model (AUC=0.7865)
+[2026-05-03T06:16:15.761297764Z] 
+[2026-05-03T06:16:15.761476345Z] --- Epoch 4/40 ---
+[2026-05-03T06:16:19.760076441Z]   [train] batch 0/138 | loss=0.0224
+[2026-05-03T06:17:46.760710932Z]   [train] batch 100/138 | loss=0.0053
+[2026-05-03T06:18:16.760971560Z]   Validating on soundscape data...
+[2026-05-03T06:18:16.761326518Z] Epoch 4/40 | loss=0.0097 | val_auc(soundscape)=0.7195 | lr=0.000238
+[2026-05-03T06:18:16.761541704Z] 
+[2026-05-03T06:18:16.761851533Z] --- Epoch 5/40 ---
+[2026-05-03T06:18:20.760585973Z]   [train] batch 0/138 | loss=0.0047
+[2026-05-03T06:19:48.759862967Z]   [train] batch 100/138 | loss=0.0036
+[2026-05-03T06:20:17.759949074Z]   Validating on soundscape data...
+[2026-05-03T06:20:18.760962139Z] Epoch 5/40 | loss=0.0093 | val_auc(soundscape)=0.7804 | lr=0.000197
+[2026-05-03T06:20:18.761157217Z]   Per-taxon AUC:
+[2026-05-03T06:20:18.761348443Z]     Amphibia: 0.7804 (6 species)
+[2026-05-03T06:20:18.761595592Z] 
+[2026-05-03T06:20:18.761763148Z] --- Epoch 6/40 ---
+[2026-05-03T06:20:22.760338341Z]   [train] batch 0/138 | loss=0.0044
+[2026-05-03T06:21:49.762144736Z]   [train] batch 100/138 | loss=0.0033
+[2026-05-03T06:22:18.760078672Z]   Validating on soundscape data...
+[2026-05-03T06:22:19.761384934Z] Epoch 6/40 | loss=0.0067 | val_auc(soundscape)=0.7677 | lr=0.000150
+[2026-05-03T06:22:19.761686098Z] 
+[2026-05-03T06:22:19.761887061Z] --- Epoch 7/40 ---
+[2026-05-03T06:22:22.760679457Z]   [train] batch 0/138 | loss=0.0029
+[2026-05-03T06:23:48.759997828Z]   [train] batch 100/138 | loss=0.0146
+[2026-05-03T06:24:16.761393571Z]   Validating on soundscape data...
+[2026-05-03T06:24:16.761594528Z] Epoch 7/40 | loss=0.0070 | val_auc(soundscape)=0.7679 | lr=0.000104
+[2026-05-03T06:24:16.761862269Z] 
+[2026-05-03T06:24:16.762021539Z] --- Epoch 8/40 ---
+[2026-05-03T06:24:20.760187628Z]   [train] batch 0/138 | loss=0.0196
+[2026-05-03T06:25:48.759983015Z]   [train] batch 100/138 | loss=0.0032
+[2026-05-03T06:26:16.760118959Z]   Validating on soundscape data...
+[2026-05-03T06:26:17.760084103Z] Epoch 8/40 | loss=0.0078 | val_auc(soundscape)=0.7634 | lr=0.000063
+[2026-05-03T06:26:17.760310164Z] 
+[2026-05-03T06:26:17.760515398Z] --- Epoch 9/40 ---
+[2026-05-03T06:26:21.759742455Z]   [train] batch 0/138 | loss=0.0030
+[2026-05-03T06:27:49.760097344Z]   [train] batch 100/138 | loss=0.0030
+[2026-05-03T06:28:18.760449229Z]   Validating on soundscape data...
+[2026-05-03T06:28:19.760753713Z] Epoch 9/40 | loss=0.0077 | val_auc(soundscape)=0.7572 | lr=0.000030
+[2026-05-03T06:28:19.760908232Z] 
+[2026-05-03T06:28:19.761051407Z] --- Epoch 10/40 ---
+[2026-05-03T06:28:23.759886955Z]   [train] batch 0/138 | loss=0.0033
+[2026-05-03T06:29:49.760963584Z]   [train] batch 100/138 | loss=0.0031
+[2026-05-03T06:30:17.760931011Z]   Validating on soundscape data...
+[2026-05-03T06:30:17.761148092Z] Epoch 10/40 | loss=0.0070 | val_auc(soundscape)=0.7343 | lr=0.000008
+[2026-05-03T06:30:17.761375846Z]   Per-taxon AUC:
+[2026-05-03T06:30:17.761577026Z]     Amphibia: 0.7343 (6 species)
+[2026-05-03T06:30:17.761787612Z] 
+[2026-05-03T06:30:17.762003781Z] --- Epoch 11/40 ---
+[2026-05-03T06:30:22.760552700Z]   [train] batch 0/138 | loss=0.0135
+[2026-05-03T06:31:48.760002675Z]   [train] batch 100/138 | loss=0.0023
+[2026-05-03T06:32:17.761219355Z]   Validating on soundscape data...
+[2026-05-03T06:32:17.761457784Z] Epoch 11/40 | loss=0.0074 | val_auc(soundscape)=0.7443 | lr=0.000300
+[2026-05-03T06:32:17.761664689Z] 
+[2026-05-03T06:32:17.761899779Z] --- Epoch 12/40 ---
+[2026-05-03T06:32:21.760798911Z]   [train] batch 0/138 | loss=0.0030
+[2026-05-03T06:33:50.760994853Z]   [train] batch 100/138 | loss=0.0124
+[2026-05-03T06:34:17.760149358Z]   Validating on soundscape data...
+[2026-05-03T06:34:18.761107937Z] Epoch 12/40 | loss=0.0067 | val_auc(soundscape)=0.7966 | lr=0.000298
+[2026-05-03T06:34:18.761314966Z]   -> Saved best model (AUC=0.7966)
+[2026-05-03T06:34:18.761507620Z] 
+[2026-05-03T06:34:18.761648332Z] --- Epoch 13/40 ---
+[2026-05-03T06:34:22.761009490Z]   [train] batch 0/138 | loss=0.0270
+[2026-05-03T06:35:50.760765235Z]   [train] batch 100/138 | loss=0.0024
+[2026-05-03T06:36:19.760819778Z]   Validating on soundscape data...
+[2026-05-03T06:36:19.760989723Z] Epoch 13/40 | loss=0.0070 | val_auc(soundscape)=0.7304 | lr=0.000293
+[2026-05-03T06:36:19.761176131Z] 
+[2026-05-03T06:36:19.761373075Z] --- Epoch 14/40 ---
+[2026-05-03T06:36:23.760469013Z]   [train] batch 0/138 | loss=0.0034
+[2026-05-03T06:37:49.760458450Z]   [train] batch 100/138 | loss=0.0099
+[2026-05-03T06:38:17.760511160Z]   Validating on soundscape data...
+[2026-05-03T06:38:18.760628135Z] Epoch 14/40 | loss=0.0068 | val_auc(soundscape)=0.7702 | lr=0.000284
+[2026-05-03T06:38:18.760847225Z] 
+[2026-05-03T06:38:18.761041563Z] --- Epoch 15/40 ---
+[2026-05-03T06:38:22.760846096Z]   [train] batch 0/138 | loss=0.0181
+[2026-05-03T06:39:48.760270152Z]   [train] batch 100/138 | loss=0.0151
+[2026-05-03T06:40:16.760537333Z]   Validating on soundscape data...
+[2026-05-03T06:40:17.761796178Z] Epoch 15/40 | loss=0.0067 | val_auc(soundscape)=0.9044 | lr=0.000271
+[2026-05-03T06:40:17.762051855Z]   -> Saved best model (AUC=0.9044)
+[2026-05-03T06:40:17.762230451Z]   Per-taxon AUC:
+[2026-05-03T06:40:17.762442414Z]     Amphibia: 0.9044 (6 species)
+[2026-05-03T06:40:17.762596183Z] 
+[2026-05-03T06:40:17.762788797Z] --- Epoch 16/40 ---
+[2026-05-03T06:40:21.760843283Z]   [train] batch 0/138 | loss=0.0020
+[2026-05-03T06:41:50.760736656Z]   [train] batch 100/138 | loss=0.0018
+[2026-05-03T06:42:18.761288882Z]   Validating on soundscape data...
+[2026-05-03T06:42:18.761620910Z] Epoch 16/40 | loss=0.0059 | val_auc(soundscape)=0.8468 | lr=0.000256
+[2026-05-03T06:42:18.761831852Z] 
+[2026-05-03T06:42:18.762042827Z] --- Epoch 17/40 ---
+[2026-05-03T06:42:22.760630166Z]   [train] batch 0/138 | loss=0.0017
+[2026-05-03T06:43:50.760582532Z]   [train] batch 100/138 | loss=0.0019
+[2026-05-03T06:44:18.760177280Z]   Validating on soundscape data...
+[2026-05-03T06:44:19.761108964Z] Epoch 17/40 | loss=0.0050 | val_auc(soundscape)=0.7806 | lr=0.000238
+[2026-05-03T06:44:19.761336736Z] 
+[2026-05-03T06:44:19.761509475Z] --- Epoch 18/40 ---
+[2026-05-03T06:44:23.760450337Z]   [train] batch 0/138 | loss=0.0102
+[2026-05-03T06:45:48.760534277Z]   [train] batch 100/138 | loss=0.0023
+[2026-05-03T06:46:18.760586928Z]   Validating on soundscape data...
+[2026-05-03T06:46:18.760849476Z] Epoch 18/40 | loss=0.0065 | val_auc(soundscape)=0.7912 | lr=0.000218
+[2026-05-03T06:46:18.761137690Z] 
+[2026-05-03T06:46:18.761368045Z] --- Epoch 19/40 ---
+[2026-05-03T06:46:22.763785755Z]   [train] batch 0/138 | loss=0.0194
+[2026-05-03T06:47:49.760709612Z]   [train] batch 100/138 | loss=0.0019
+[2026-05-03T06:48:18.760614436Z]   Validating on soundscape data...
+[2026-05-03T06:48:18.760804043Z] Epoch 19/40 | loss=0.0058 | val_auc(soundscape)=0.8505 | lr=0.000197
+[2026-05-03T06:48:18.760994348Z] 
+[2026-05-03T06:48:18.761155384Z] --- Epoch 20/40 ---
+[2026-05-03T06:48:22.760764204Z]   [train] batch 0/138 | loss=0.0016
+[2026-05-03T06:49:49.760867074Z]   [train] batch 100/138 | loss=0.0017
+[2026-05-03T06:50:18.760361910Z]   Validating on soundscape data...
+[2026-05-03T06:50:19.761175042Z] Epoch 20/40 | loss=0.0061 | val_auc(soundscape)=0.7867 | lr=0.000174
+[2026-05-03T06:50:19.761359210Z]   Per-taxon AUC:
+[2026-05-03T06:50:19.761534345Z]     Amphibia: 0.7867 (6 species)
+[2026-05-03T06:50:19.761699050Z] 
+[2026-05-03T06:50:19.761879603Z] --- Epoch 21/40 ---
+[2026-05-03T06:50:22.760307809Z]   [train] batch 0/138 | loss=0.0030
+[2026-05-03T06:51:49.760441013Z]   [train] batch 100/138 | loss=0.0095
+[2026-05-03T06:52:18.759851767Z]   Validating on soundscape data...
+[2026-05-03T06:52:19.760859796Z] Epoch 21/40 | loss=0.0073 | val_auc(soundscape)=0.6825 | lr=0.000150
+[2026-05-03T06:52:19.761041800Z] 
+[2026-05-03T06:52:19.761249340Z] --- Epoch 22/40 ---
+[2026-05-03T06:52:23.760320654Z]   [train] batch 0/138 | loss=0.0036
+[2026-05-03T06:53:52.760835886Z]   [train] batch 100/138 | loss=0.0220
+[2026-05-03T06:54:20.760573411Z]   Validating on soundscape data...
+[2026-05-03T06:54:21.760677641Z] Epoch 22/40 | loss=0.0065 | val_auc(soundscape)=0.7343 | lr=0.000127
+[2026-05-03T06:54:21.760853430Z] 
+[2026-05-03T06:54:21.761068177Z] --- Epoch 23/40 ---
+[2026-05-03T06:54:25.761337094Z]   [train] batch 0/138 | loss=0.0023
+[2026-05-03T06:55:51.760594093Z]   [train] batch 100/138 | loss=0.0306
+[2026-05-03T06:56:20.760012044Z]   Validating on soundscape data...
+[2026-05-03T06:56:21.760717976Z] Epoch 23/40 | loss=0.0054 | val_auc(soundscape)=0.6848 | lr=0.000104
+[2026-05-03T06:56:21.760962867Z] 
+[2026-05-03T06:56:21.761148582Z] --- Epoch 24/40 ---
+[2026-05-03T06:56:25.760289766Z]   [train] batch 0/138 | loss=0.0015
+[2026-05-03T06:57:53.760303680Z]   [train] batch 100/138 | loss=0.0146
+[2026-05-03T06:58:21.760020001Z]   Validating on soundscape data...
+[2026-05-03T06:58:22.761102327Z] Epoch 24/40 | loss=0.0049 | val_auc(soundscape)=0.6985 | lr=0.000083
+[2026-05-03T06:58:22.761285309Z] 
+[2026-05-03T06:58:22.761471578Z] --- Epoch 25/40 ---
+[2026-05-03T06:58:25.760171397Z]   [train] batch 0/138 | loss=0.0017
+[2026-05-03T06:59:54.760555075Z]   [train] batch 100/138 | loss=0.0151
+[2026-05-03T07:00:23.761810713Z]   Validating on soundscape data...
+[2026-05-03T07:00:23.762104541Z] Epoch 25/40 | loss=0.0060 | val_auc(soundscape)=0.6762 | lr=0.000063
+[2026-05-03T07:00:23.762349124Z]   Per-taxon AUC:
+[2026-05-03T07:00:23.762546151Z]     Amphibia: 0.6762 (6 species)
+[2026-05-03T07:00:23.762876817Z] 
+[2026-05-03T07:00:23.763162653Z] --- Epoch 26/40 ---
+[2026-05-03T07:00:27.760762146Z]   [train] batch 0/138 | loss=0.0013
+[2026-05-03T07:01:57.772627522Z]   [train] batch 100/138 | loss=0.0012
+[2026-05-03T07:02:25.760221259Z]   Validating on soundscape data...
+[2026-05-03T07:02:26.760127626Z] Epoch 26/40 | loss=0.0045 | val_auc(soundscape)=0.7237 | lr=0.000045
+[2026-05-03T07:02:26.760329960Z] 
+[2026-05-03T07:02:26.760518436Z] --- Epoch 27/40 ---
+[2026-05-03T07:02:30.759714222Z]   [train] batch 0/138 | loss=0.0011
+[2026-05-03T07:03:56.760164134Z]   [train] batch 100/138 | loss=0.0015
+[2026-05-03T07:04:25.760387933Z]   Validating on soundscape data...
+[2026-05-03T07:04:26.760915204Z] Epoch 27/40 | loss=0.0044 | val_auc(soundscape)=0.6925 | lr=0.000030
+[2026-05-03T07:04:26.761089281Z] 
+[2026-05-03T07:04:26.761253727Z] --- Epoch 28/40 ---
+[2026-05-03T07:04:29.760114505Z]   [train] batch 0/138 | loss=0.0107
+[2026-05-03T07:05:57.760564527Z]   [train] batch 100/138 | loss=0.0011
+[2026-05-03T07:06:26.760306806Z]   Validating on soundscape data...
+[2026-05-03T07:06:27.760181371Z] Epoch 28/40 | loss=0.0044 | val_auc(soundscape)=0.6851 | lr=0.000017
+[2026-05-03T07:06:27.760366920Z] 
+[2026-05-03T07:06:27.760563488Z] --- Epoch 29/40 ---
+[2026-05-03T07:06:31.760364177Z]   [train] batch 0/138 | loss=0.0128
+[2026-05-03T07:08:00.760022871Z]   [train] batch 100/138 | loss=0.0081
+[2026-05-03T07:08:28.760676270Z]   Validating on soundscape data...
+[2026-05-03T07:08:29.760534065Z] Epoch 29/40 | loss=0.0050 | val_auc(soundscape)=0.6802 | lr=0.000008
+[2026-05-03T07:08:29.760763103Z] 
+[2026-05-03T07:08:29.760922424Z] --- Epoch 30/40 ---
+[2026-05-03T07:08:33.759707921Z]   [train] batch 0/138 | loss=0.0010
+[2026-05-03T07:10:02.759759816Z]   [train] batch 100/138 | loss=0.0010
+[2026-05-03T07:10:30.760047711Z]   Validating on soundscape data...
+[2026-05-03T07:10:31.761579915Z] Epoch 30/40 | loss=0.0052 | val_auc(soundscape)=0.6893 | lr=0.000003
+[2026-05-03T07:10:31.761762723Z]   Per-taxon AUC:
+[2026-05-03T07:10:31.761939200Z]     Amphibia: 0.6893 (6 species)
+[2026-05-03T07:10:31.762105698Z] 
+[2026-05-03T07:10:31.762284001Z] --- Epoch 31/40 ---
+[2026-05-03T07:10:35.760273484Z]   [train] batch 0/138 | loss=0.0012
+[2026-05-03T07:12:01.761151094Z]   [train] batch 100/138 | loss=0.0014
+[2026-05-03T07:12:28.760346665Z]   Validating on soundscape data...
+[2026-05-03T07:12:29.760952791Z] Epoch 31/40 | loss=0.0066 | val_auc(soundscape)=0.7879 | lr=0.000300
+[2026-05-03T07:12:29.761162565Z] 
+[2026-05-03T07:12:29.761353278Z] --- Epoch 32/40 ---
+[2026-05-03T07:12:33.760651492Z]   [train] batch 0/138 | loss=0.0024
+[2026-05-03T07:14:00.760697534Z]   [train] batch 100/138 | loss=0.0019
+[2026-05-03T07:14:30.760330142Z]   Validating on soundscape data...
+[2026-05-03T07:14:30.760522315Z] Epoch 32/40 | loss=0.0065 | val_auc(soundscape)=0.7660 | lr=0.000300
+[2026-05-03T07:14:30.760666564Z] 
+[2026-05-03T07:14:30.760824412Z] --- Epoch 33/40 ---
+[2026-05-03T07:14:34.760679110Z]   [train] batch 0/138 | loss=0.0167
+[2026-05-03T07:16:02.759757553Z]   [train] batch 100/138 | loss=0.0148
+[2026-05-03T07:16:30.760073890Z]   Validating on soundscape data...
+[2026-05-03T07:16:31.761144496Z] Epoch 33/40 | loss=0.0063 | val_auc(soundscape)=0.6673 | lr=0.000298
+[2026-05-03T07:16:31.761426402Z] 
+[2026-05-03T07:16:31.761599374Z] --- Epoch 34/40 ---
+[2026-05-03T07:16:35.760168288Z]   [train] batch 0/138 | loss=0.0129
+[2026-05-03T07:18:04.760174403Z]   [train] batch 100/138 | loss=0.0021
+[2026-05-03T07:18:32.760008464Z]   Validating on soundscape data...
+[2026-05-03T07:18:33.760510591Z] Epoch 34/40 | loss=0.0056 | val_auc(soundscape)=0.6292 | lr=0.000296
+[2026-05-03T07:18:33.760733125Z] 
+[2026-05-03T07:18:33.760910882Z] --- Epoch 35/40 ---
+[2026-05-03T07:18:37.760289730Z]   [train] batch 0/138 | loss=0.0012
+[2026-05-03T07:20:05.760164522Z]   [train] batch 100/138 | loss=0.0011
+[2026-05-03T07:20:33.760250691Z]   Validating on soundscape data...
+[2026-05-03T07:20:34.761232176Z] Epoch 35/40 | loss=0.0057 | val_auc(soundscape)=0.7844 | lr=0.000293
+[2026-05-03T07:20:34.761407829Z]   Per-taxon AUC:
+[2026-05-03T07:20:34.761596895Z]     Amphibia: 0.7844 (6 species)
+[2026-05-03T07:20:34.761766499Z] 
+[2026-05-03T07:20:34.762018961Z] --- Epoch 36/40 ---
+[2026-05-03T07:20:37.760990687Z]   [train] batch 0/138 | loss=0.0104
+[2026-05-03T07:22:07.760836696Z]   [train] batch 100/138 | loss=0.0018
+[2026-05-03T07:22:35.759708510Z]   Validating on soundscape data...
+[2026-05-03T07:22:36.760522641Z] Epoch 36/40 | loss=0.0052 | val_auc(soundscape)=0.7088 | lr=0.000289
+[2026-05-03T07:22:36.760711205Z] 
+[2026-05-03T07:22:36.760879908Z] --- Epoch 37/40 ---
+[2026-05-03T07:22:40.760561453Z]   [train] batch 0/138 | loss=0.0010
+[2026-05-03T07:24:08.760640485Z]   [train] batch 100/138 | loss=0.0012
+[2026-05-03T07:24:38.760685950Z]   Validating on soundscape data...
+[2026-05-03T07:24:39.760621175Z] Epoch 37/40 | loss=0.0045 | val_auc(soundscape)=0.8064 | lr=0.000284
+[2026-05-03T07:24:39.760812735Z] 
+[2026-05-03T07:24:39.761016045Z] --- Epoch 38/40 ---
+[2026-05-03T07:24:43.760837420Z]   [train] batch 0/138 | loss=0.0013
+[2026-05-03T07:26:12.760296422Z]   [train] batch 100/138 | loss=0.0006
+[2026-05-03T07:26:40.760833293Z]   Validating on soundscape data...
+[2026-05-03T07:26:41.760488404Z] Epoch 38/40 | loss=0.0046 | val_auc(soundscape)=0.8327 | lr=0.000278
+[2026-05-03T07:26:41.760670876Z] 
+[2026-05-03T07:26:41.760930711Z] --- Epoch 39/40 ---
+[2026-05-03T07:26:45.760726114Z]   [train] batch 0/138 | loss=0.0156
+[2026-05-03T07:28:11.760251370Z]   [train] batch 100/138 | loss=0.0010
+[2026-05-03T07:28:40.760323828Z]   Validating on soundscape data...
+[2026-05-03T07:28:41.760766500Z] Epoch 39/40 | loss=0.0049 | val_auc(soundscape)=0.7938 | lr=0.000271
+[2026-05-03T07:28:41.760968752Z] 
+[2026-05-03T07:28:41.761269764Z] --- Epoch 40/40 ---
+[2026-05-03T07:28:45.760223382Z]   [train] batch 0/138 | loss=0.0008
+[2026-05-03T07:30:13.760832053Z]   [train] batch 100/138 | loss=0.0010
+[2026-05-03T07:30:42.761576586Z]   Validating on soundscape data...
+[2026-05-03T07:30:42.761779910Z] Epoch 40/40 | loss=0.0044 | val_auc(soundscape)=0.7436 | lr=0.000264
+[2026-05-03T07:30:42.761968225Z]   Per-taxon AUC:
+[2026-05-03T07:30:42.762142501Z]     Amphibia: 0.7436 (6 species)
+[2026-05-03T07:30:43.761385332Z] Saved final model: checkpoints/last_v4_v2s_melmix.pt
+[2026-05-03T07:30:43.761612587Z] 
+[2026-05-03T07:30:43.761808761Z] Best soundscape validation AUC: 0.9044
+[2026-05-03T07:30:43.761995430Z] Export with: python -m src.export_onnx --checkpoint best_v4_v2s_melmix.pt --backbone tf_efficientnetv2_s.in21k_ft_in1k
