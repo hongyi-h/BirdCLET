@@ -175,3 +175,33 @@ python -m src.export_onnx --checkpoint last_v4_v2s_full_melmix.pt \
 
 Code change after this run:
 - `src/train.py` now prints `last_*` as the export checkpoint when `--train_all_soundscapes` is set, instead of misleadingly suggesting `best_*`.
+
+## ONNX Export Failure — 2026-05-03
+
+Command failed before loading the checkpoint:
+
+```bash
+python -m src.export_onnx \
+  --checkpoint last_v4_v2s_full_melmix.pt \
+  --backbone v2s \
+  --output model_v2s_full_melmix.onnx
+```
+
+Root cause:
+- `src.model` imports `timm`.
+- This server's `timm` import path triggers `torch.compiler.disable`, which imports `torch._dynamo`, then `triton`.
+- The installed Triton has a MetaX backend that expects a MACA install path; `maca_home_dirs()` returned `None`, causing `TypeError`.
+- Export is CPU-only and does not need Dynamo/Triton, so this is an environment/import side effect, not a model/checkpoint problem.
+
+Code changes:
+- `src/model.py` now patches `torch.compiler.disable` to an identity decorator before importing `timm`, preventing the unnecessary Dynamo/Triton import path.
+- `src/export_onnx.py` now accepts both bare checkpoint names and explicit checkpoint paths.
+
+Retry after syncing code:
+
+```bash
+python -m src.export_onnx \
+  --checkpoint last_v4_v2s_full_melmix.pt \
+  --backbone v2s \
+  --output model_v2s_full_melmix.onnx
+```

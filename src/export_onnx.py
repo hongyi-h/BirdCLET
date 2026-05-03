@@ -26,7 +26,10 @@ def export(checkpoint, backbone_key, output_name, num_classes=CFG.NUM_CLASSES):
         pretrained=False, model_name=backbone_name, num_classes=num_classes
     ).to(device)
 
-    ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, checkpoint)
+    if os.path.isabs(checkpoint) or os.path.exists(checkpoint):
+        ckpt_path = checkpoint
+    else:
+        ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, checkpoint)
     state = torch.load(ckpt_path, map_location=device)
     full_model.load_state_dict(state, strict=False)
     full_model.eval()

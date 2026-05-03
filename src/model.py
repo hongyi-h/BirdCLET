@@ -1,5 +1,23 @@
 import torch
 import torch.nn as nn
+
+
+def _avoid_timm_dynamo_triton_import():
+    """Keep timm import from pulling in torch._dynamo/triton on export-only paths."""
+    try:
+        import torch.compiler
+
+        def disable_compile(fn=None, *args, **kwargs):
+            if fn is None:
+                return lambda wrapped: wrapped
+            return fn
+
+        torch.compiler.disable = disable_compile
+    except Exception:
+        pass
+
+
+_avoid_timm_dynamo_triton_import()
 import timm
 import torchaudio.transforms as T
 import src.config as CFG
