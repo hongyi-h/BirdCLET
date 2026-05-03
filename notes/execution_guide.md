@@ -176,15 +176,16 @@ python -m src.export_onnx --checkpoint best_specialist.pt --backbone b0 --num_cl
 ### Upload to Kaggle
 
 1. Create Kaggle Dataset `birdclef2026-models` containing:
-   - `model_v2s.onnx`
-   - `model_nfnet.onnx`
-   - `model_regnety.onnx`
+   - `model_v2s_full_melmix.onnx` for the single-model smoke test.
+   - Later ensemble runs can add `model_nfnet.onnx` and `model_regnety.onnx`.
 
 2. Create Kaggle Dataset `birdclef2026-specialist` containing:
    - `specialist.onnx`
    - `specialist_mapping.npy`
 
 3. Use `inference.py` as the Kaggle notebook code.
+
+The notebook log must show a non-empty `Found main ONNX models: [...]`. A run that writes a dummy or constant submission is not a valid leaderboard signal.
 
 ---
 

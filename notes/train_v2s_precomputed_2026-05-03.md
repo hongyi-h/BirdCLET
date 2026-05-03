@@ -229,3 +229,24 @@ Decision:
 - This ONNX is valid for a single-model leaderboard smoke submission.
 - Root `inference.py` discovers all non-specialist `.onnx` files in the model dataset directory, so this filename is acceptable.
 - For a clean single-model smoke test, upload only `model_v2s_full_melmix.onnx` in the attached model dataset.
+
+## Leaderboard Smoke Score 0.500 — 2026-05-03
+
+Observation:
+- Single-model leaderboard score returned exactly 0.500.
+
+Root-cause diagnosis:
+- A score this close to exactly 0.500 is much more consistent with a constant/dummy submission than with a weak trained model.
+- The active `inference.py` had a silent fallback: if no ONNX model was loaded, it wrote a full-zero `submission.csv`.
+- The Kaggle model paths were also brittle. Model datasets are attached under `/kaggle/input/<dataset-slug>/`, not inside the competition data directory.
+
+Code changes:
+- `inference.py` now discovers ONNX models recursively under `/kaggle/input`.
+- It prints the resolved test/taxonomy/sample/model paths.
+- If no main ONNX model loads, it raises `RuntimeError` instead of writing a dummy submission.
+- It checks prediction class count, finite values, and prediction variance before writing `submission.csv`.
+
+Decision:
+- Rerun the notebook with the fixed `inference.py`.
+- In the notebook log, verify that it prints a non-empty `Found main ONNX models: [...]` containing `model_v2s_full_melmix.onnx`.
+- Also verify non-constant prediction stats before submitting.

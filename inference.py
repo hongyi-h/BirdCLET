@@ -33,49 +33,95 @@ SMOOTH_WEIGHTS = np.array([0.15, 0.7, 0.15])
 # ============================================================
 IS_KAGGLE = os.path.exists("/kaggle/input")
 
-if IS_KAGGLE:
-    TEST_DIR = "/kaggle/input/birdclef-2026/test_soundscapes"
-    TAXONOMY_PATH = "/kaggle/input/birdclef-2026/taxonomy.csv"
-    SAMPLE_SUB_PATH = "/kaggle/input/birdclef-2026/sample_submission.csv"
+def first_existing_path(candidates, name):
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    raise FileNotFoundError(f"{name} not found. Tried: {candidates}")
 
-    MAIN_MODEL_DIRS = [
+
+def discover_kaggle_model_dirs():
+    """Return directories that contain ONNX files in attached Kaggle datasets."""
+    roots = [
         "/kaggle/input/birdclef2026-models",
         "/kaggle/input/birdclef2026-model",
         "/kaggle/input/birdclef2026-model-v2",
+        "/kaggle/input/birdclef2026-models-v2",
     ]
-    SPECIALIST_DIR = "/kaggle/input/birdclef2026-specialist"
-    SPECIALIST_MAPPING_PATH = "/kaggle/input/birdclef2026-specialist/specialist_mapping.npy"
+    discovered = []
+    for onnx_path in glob.glob("/kaggle/input/**/*.onnx", recursive=True):
+        model_dir = os.path.dirname(onnx_path)
+        if model_dir not in discovered:
+            discovered.append(model_dir)
+    dirs = []
+    for path in roots + discovered:
+        if os.path.isdir(path) and path not in dirs:
+            dirs.append(path)
+    return dirs
+
+
+if IS_KAGGLE:
+    COMP_DIRS = [
+        "/kaggle/input/birdclef-2026",
+        "/kaggle/input/competitions/birdclef-2026",
+    ]
+    TEST_DIR = first_existing_path(
+        [os.path.join(root, "test_soundscapes") for root in COMP_DIRS],
+        "test_soundscapes",
+    )
+    TAXONOMY_PATH = first_existing_path(
+        [os.path.join(root, "taxonomy.csv") for root in COMP_DIRS],
+        "taxonomy.csv",
+    )
+    SAMPLE_SUB_PATH = first_existing_path(
+        [os.path.join(root, "sample_submission.csv") for root in COMP_DIRS],
+        "sample_submission.csv",
+    )
+
+    MAIN_MODEL_DIRS = discover_kaggle_model_dirs()
+    SPECIALIST_DIRS = MAIN_MODEL_DIRS
+    SPECIALIST_MAPPING_PATHS = [
+        os.path.join(d, "specialist_mapping.npy") for d in MAIN_MODEL_DIRS
+    ]
 else:
     TEST_DIR = "data/test_soundscapes"
     TAXONOMY_PATH = "data/taxonomy.csv"
     SAMPLE_SUB_PATH = "data/sample_submission.csv"
     MAIN_MODEL_DIRS = ["checkpoints"]
-    SPECIALIST_DIR = "checkpoints"
-    SPECIALIST_MAPPING_PATH = "checkpoints/specialist_mapping.npy"
+    SPECIALIST_DIRS = ["checkpoints"]
+    SPECIALIST_MAPPING_PATHS = ["checkpoints/specialist_mapping.npy"]
 
 
-def find_onnx_models(dirs, prefix="model"):
+def find_onnx_models(dirs):
     """Find all .onnx files across multiple directories."""
     paths = []
     seen = set()
     for d in dirs:
         if not os.path.isdir(d):
             continue
-        for f in sorted(os.listdir(d)):
-            if f.endswith(".onnx") and not f.startswith("specialist"):
-                path = os.path.join(d, f)
-                if path not in seen:
-                    paths.append(path)
-                    seen.add(path)
+        for path in sorted(glob.glob(os.path.join(d, "**", "*.onnx"), recursive=True)):
+            name = os.path.basename(path)
+            if name.startswith("specialist"):
+                continue
+            if path not in seen:
+                paths.append(path)
+                seen.add(path)
     return paths
 
 
-def find_specialist_model(specialist_dir):
-    if not os.path.isdir(specialist_dir):
-        return None
-    for f in sorted(os.listdir(specialist_dir)):
-        if f.startswith("specialist") and f.endswith(".onnx"):
-            return os.path.join(specialist_dir, f)
+def find_specialist_model(dirs):
+    for d in dirs:
+        if not os.path.isdir(d):
+            continue
+        for path in sorted(glob.glob(os.path.join(d, "**", "specialist*.onnx"), recursive=True)):
+            return path
+    return None
+
+
+def find_specialist_mapping(paths):
+    for path in paths:
+        if os.path.exists(path):
+            return path
     return None
 
 
@@ -158,7 +204,7 @@ def sigmoid(logits):
 
 
 def load_specialist_mapping(path):
-    if not os.path.exists(path):
+    if path is None or not os.path.exists(path):
         return None
     mapping = np.load(path, allow_pickle=True).item()
     indices = [int(i) for i in mapping["nonbird_indices"]]
@@ -184,11 +230,17 @@ def load_session(path):
 def main():
     t_start = time.time()
 
+    print(f"TEST_DIR: {TEST_DIR}")
+    print(f"TAXONOMY_PATH: {TAXONOMY_PATH}")
+    print(f"SAMPLE_SUB_PATH: {SAMPLE_SUB_PATH}")
+    print(f"MODEL_DIRS: {MAIN_MODEL_DIRS}")
+
     tax = pd.read_csv(TAXONOMY_PATH)
     species_cols = sorted(tax["primary_label"].astype(str).tolist())
 
     # --- Load main models ---
     main_paths = find_onnx_models(MAIN_MODEL_DIRS)
+    print(f"Found main ONNX models: {main_paths}")
     main_sessions = []
     for p in main_paths:
         try:
@@ -201,26 +253,26 @@ def main():
     # --- Load specialist model ---
     specialist_sess = None
     specialist_indices = None
-    spec_path = find_specialist_model(SPECIALIST_DIR)
+    spec_path = find_specialist_model(SPECIALIST_DIRS)
     if spec_path:
         try:
             specialist_sess = load_session(spec_path)
-            specialist_indices = load_specialist_mapping(SPECIALIST_MAPPING_PATH)
+            specialist_mapping_path = find_specialist_mapping(SPECIALIST_MAPPING_PATHS)
+            specialist_indices = load_specialist_mapping(specialist_mapping_path)
             if specialist_indices is not None:
                 print(f"Loaded specialist: {spec_path} ({len(specialist_indices)} species)")
             else:
-                print(f"Specialist model found but mapping missing: {SPECIALIST_MAPPING_PATH}")
+                print(f"Specialist model found but mapping missing: {SPECIALIST_MAPPING_PATHS}")
                 specialist_sess = None
         except Exception as e:
             print(f"Failed to load specialist: {e}")
             specialist_sess = None
 
     if not main_sessions:
-        print("No models found. Generating dummy submission.")
-        sub = pd.read_csv(SAMPLE_SUB_PATH)
-        sub[species_cols] = 0.0
-        sub.to_csv("submission.csv", index=False)
-        return
+        raise RuntimeError(
+            "No main ONNX models loaded. Attach the model Kaggle Dataset containing "
+            "model_v2s_full_melmix.onnx, or fix MAIN_MODEL_DIRS."
+        )
 
     print(f"Ensemble: {len(main_sessions)} main + {'1 specialist' if specialist_sess else 'no specialist'}")
 
@@ -238,6 +290,10 @@ def main():
     main_input_names = [sess.get_inputs()[0].name for sess in main_sessions]
     specialist_input_name = specialist_sess.get_inputs()[0].name if specialist_sess is not None else None
     num_samples_per_seg = SR * DURATION
+    for path, sess in zip(main_paths, main_sessions):
+        output_shape = sess.get_outputs()[0].shape
+        if output_shape[-1] not in (NUM_CLASSES, "num_classes", None):
+            raise RuntimeError(f"Unexpected output shape for {path}: {output_shape}")
 
     # --- Process files: keep predictions, not all mels, to preserve memory ---
     print("Running inference...")
@@ -287,6 +343,12 @@ def main():
     else:
         final_probs_all = main_prob_list[0]
 
+    if final_probs_all.shape[1] != len(species_cols):
+        raise RuntimeError(
+            f"Prediction class count mismatch: preds={final_probs_all.shape[1]}, "
+            f"taxonomy={len(species_cols)}"
+        )
+
     if specialist_sess is not None and specialist_indices is not None and specialist_prob_parts:
         spec_probs_all = np.concatenate(specialist_prob_parts, axis=0)
         if spec_probs_all.shape[1] < len(specialist_indices):
@@ -301,6 +363,15 @@ def main():
     # Temporal smoothing must stay per soundscape file after global ensemble ranking.
     for offset in range(0, len(row_meta), 12):
         final_probs_all[offset:offset + 12] = temporal_smooth(final_probs_all[offset:offset + 12])
+
+    if not np.isfinite(final_probs_all).all():
+        raise RuntimeError("Predictions contain NaN or Inf.")
+    pred_std = float(np.std(final_probs_all))
+    pred_min = float(np.min(final_probs_all))
+    pred_max = float(np.max(final_probs_all))
+    print(f"Prediction stats: min={pred_min:.6f}, max={pred_max:.6f}, std={pred_std:.6f}")
+    if pred_std < 1e-8:
+        raise RuntimeError("Predictions are constant; refusing to write a 0.5-AUC submission.")
 
     rows = []
     for row_i, (fname_no_ext, end_t) in enumerate(row_meta):
