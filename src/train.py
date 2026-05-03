@@ -41,7 +41,12 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=128, help="Per-GPU batch size")
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--soundscape_ratio", type=float, default=0.4)
+    parser.add_argument("--val_ratio", type=float, default=0.3)
+    parser.add_argument("--train_all_soundscapes", action="store_true",
+                        help="Include validation soundscape segments in training. Use only for final/teacher runs.")
     parser.add_argument("--mixup_prob", type=float, default=0.5)
+    parser.add_argument("--precomputed_mixup_prob", type=float, default=0.3,
+                        help="Batch-level mel mixup probability for --precomputed training")
     parser.add_argument("--bg_mix_prob", type=float, default=0.6)
     parser.add_argument("--label_smoothing", type=float, default=0.02)
     parser.add_argument("--focal_gamma", type=float, default=2.0)
@@ -72,6 +77,27 @@ def setup_ddp():
     rank = int(os.environ["RANK"])
     local_rank = int(os.environ["LOCAL_RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
+    local_world_size = int(os.environ.get("LOCAL_WORLD_SIZE", world_size))
+    visible_devices = torch.cuda.device_count()
+
+    if visible_devices == 0:
+        raise RuntimeError(
+            "DDP was launched but torch.cuda.device_count() == 0. "
+            "Run on a GPU node or use the single-process CPU/GPU command."
+        )
+    if local_world_size > visible_devices:
+        raise RuntimeError(
+            f"torchrun requested LOCAL_WORLD_SIZE={local_world_size}, but only "
+            f"{visible_devices} CUDA device(s) are visible in this process. "
+            f"Relaunch with --nproc_per_node={visible_devices}, or make more GPUs "
+            "visible to the job, e.g. CUDA_VISIBLE_DEVICES=0,1,... or "
+            "MTHREADS_VISIBLE_DEVICES=0,1,... on MetaX."
+        )
+    if local_rank >= visible_devices:
+        raise RuntimeError(
+            f"local_rank={local_rank} is out of range for {visible_devices} visible CUDA device(s). "
+            "Check --nproc_per_node and GPU visibility."
+        )
 
     # MetaX MUSA: try mccl, fall back to nccl, then gloo
     for backend in ["mccl", "nccl", "gloo"]:
@@ -105,6 +131,18 @@ def cleanup_ddp():
 
 def is_main(rank):
     return rank == 0
+
+
+def ddp_barrier(device):
+    if not dist.is_initialized():
+        return
+    try:
+        if device.type == "cuda":
+            dist.barrier(device_ids=[device.index])
+        else:
+            dist.barrier()
+    except TypeError:
+        dist.barrier()
 
 
 # ============================================================
@@ -461,7 +499,15 @@ def build_precomputed_records(subset_dir, domain, label_map):
 # ============================================================
 # Validation split by site
 # ============================================================
-def split_soundscape_by_site(entries, val_ratio=0.3):
+def count_entry_labels(entries):
+    counts = {}
+    for entry in entries:
+        for label in entry_labels(entry):
+            counts[label] = counts.get(label, 0) + 1
+    return counts
+
+
+def split_soundscape_by_site(entries, val_ratio=0.3, protect_train_labels=True):
     sites = {}
     for e in entries:
         site = e.get("site")
@@ -472,8 +518,28 @@ def split_soundscape_by_site(entries, val_ratio=0.3):
 
     site_list = sorted(sites.keys())
     random.shuffle(site_list)
-    val_count = max(1, int(len(site_list) * val_ratio))
-    val_sites = set(site_list[:val_count])
+    target_val_count = max(1, int(len(site_list) * val_ratio))
+
+    if protect_train_labels:
+        remaining_counts = count_entry_labels(entries)
+        val_sites = set()
+        for site in site_list:
+            if len(val_sites) >= target_val_count:
+                break
+            site_counts = count_entry_labels(sites[site])
+            would_remove_label = any(
+                remaining_counts.get(label, 0) - count <= 0
+                for label, count in site_counts.items()
+            )
+            if would_remove_label:
+                continue
+            val_sites.add(site)
+            for label, count in site_counts.items():
+                remaining_counts[label] -= count
+        if not val_sites:
+            val_sites = set(site_list[:target_val_count])
+    else:
+        val_sites = set(site_list[:target_val_count])
 
     train_entries, val_entries = [], []
     for site, se in sites.items():
@@ -560,7 +626,7 @@ def compute_classwise_macro_auc(targets, preds):
                 aucs.append(auc)
                 per_class[i] = auc
             except ValueError:
-                    pass
+                pass
     return np.mean(aucs) if aucs else 0.0, per_class
 
 
@@ -574,11 +640,21 @@ def summarize_entries(entries, label_map):
     return domain_counts, label_set
 
 
+def apply_precomputed_mixup(mel, targets, mixup_prob):
+    if mixup_prob <= 0 or mel.size(0) < 2 or random.random() >= mixup_prob:
+        return mel, targets
+    perm = torch.randperm(mel.size(0), device=mel.device)
+    lam = float(np.random.beta(0.5, 0.5))
+    mel = lam * mel + (1.0 - lam) * mel[perm]
+    targets = torch.maximum(targets, targets[perm])
+    return mel, targets
+
+
 # ============================================================
 # Training loop
 # ============================================================
 def train_one_epoch(model, loader, optimizer, criterion, device, spec_aug, scaler=None,
-                    mel_transform=None, precomputed=False):
+                    mel_transform=None, precomputed=False, precomputed_mixup_prob=0.0):
     model.train()
     losses = []
     total = len(loader)
@@ -590,6 +666,7 @@ def train_one_epoch(model, loader, optimizer, criterion, device, spec_aug, scale
         with torch.amp.autocast("cuda", enabled=scaler is not None):
             if precomputed:
                 mel = data
+                mel, targets = apply_precomputed_mixup(mel, targets, precomputed_mixup_prob)
             else:
                 with torch.no_grad():
                     mel = mel_transform(data)
@@ -656,7 +733,8 @@ def main():
         print(f"Device: {device} | World size: {world_size}")
         print(f"Config: backbone={args.backbone}, epochs={args.epochs}, "
               f"bs={args.batch_size}x{world_size}={args.batch_size*world_size}, "
-              f"lr={args.lr}, pseudo={args.pseudo}, precomputed={args.precomputed}")
+              f"lr={args.lr}, pseudo={args.pseudo}, precomputed={args.precomputed}, "
+              f"val_ratio={args.val_ratio}, train_all_soundscapes={args.train_all_soundscapes}")
 
     label_map = build_label_map()
     species_list = sorted(label_map.keys())
@@ -672,11 +750,12 @@ def main():
         if is_main(rank):
             print(f"Precomputed focal: {len(focal_records)}, soundscape: {len(soundscape_records)}")
 
-        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_records, val_ratio=0.3)
+        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_records, val_ratio=args.val_ratio)
+        train_sc_records = soundscape_records if args.train_all_soundscapes else sc_train
 
         # Oversample soundscape
-        sc_oversample = max(1, len(focal_records) // (3 * max(len(sc_train), 1)))
-        all_train = focal_records + sc_train * sc_oversample
+        sc_oversample = max(1, len(focal_records) // (3 * max(len(train_sc_records), 1)))
+        all_train = focal_records + train_sc_records * sc_oversample
 
         if args.pseudo:
             pseudo_dir = os.path.join(CFG.PRECOMPUTED_DIR, "pseudo")
@@ -696,9 +775,14 @@ def main():
             train_domains, train_labels = summarize_entries(all_train, label_map)
             _, val_labels = summarize_entries(sc_val, label_map)
             print(f"SC train: {len(sc_train)}, SC val: {len(sc_val)} (sites: {val_sites})")
+            if args.train_all_soundscapes:
+                print("WARNING: --train_all_soundscapes is set; validation is leaky and for monitoring only.")
             print(f"Total train: {len(train_ds)}, val: {len(val_ds)}")
             print(f"Train domains: {train_domains}")
             print(f"Train species: {len(train_labels)}, val evaluable species upper bound: {len(val_labels)}")
+            missing_train = set(label_map) - train_labels
+            if missing_train:
+                print(f"WARNING: {len(missing_train)} taxonomy species have no training positives in this split.")
 
     else:
         # Waveform-based pipeline (original)
@@ -711,22 +795,28 @@ def main():
 
         pseudo_entries = []
         if args.pseudo:
-            pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
+            pseudo_name = f"pseudo_labels_r{args.pseudo_round}.csv" if args.pseudo_round > 0 else "pseudo_labels.csv"
+            pseudo_path = os.path.join(CFG.DATA_DIR, pseudo_name)
+            if not os.path.exists(pseudo_path) and args.pseudo_round > 0:
+                pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
             if os.path.exists(pseudo_path):
                 pseudo_df = pd.read_csv(pseudo_path)
                 pseudo_entries = build_pseudo_entries(pseudo_df, label_map)
                 if is_main(rank):
-                    print(f"Pseudo-label entries: {len(pseudo_entries)}")
+                    print(f"Pseudo-label entries: {len(pseudo_entries)} ({pseudo_path})")
+            elif is_main(rank):
+                print(f"WARNING: --pseudo set but pseudo label CSV is missing: {pseudo_path}")
 
-        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_entries, val_ratio=0.3)
+        sc_train, sc_val, val_sites = split_soundscape_by_site(soundscape_entries, val_ratio=args.val_ratio)
         if is_main(rank):
             print(f"Focal: {len(focal_entries)}, SC train: {len(sc_train)}, "
                   f"SC val: {len(sc_val)} (sites: {val_sites})")
 
         bg_pool = build_background_pool(CFG.TRAIN_SOUNDSCAPES_DIR)
 
-        sc_oversample = max(1, len(focal_entries) // (3 * max(len(sc_train), 1)))
-        all_train = focal_entries + sc_train * sc_oversample + pseudo_entries
+        train_sc_entries = soundscape_entries if args.train_all_soundscapes else sc_train
+        sc_oversample = max(1, len(focal_entries) // (3 * max(len(train_sc_entries), 1)))
+        all_train = focal_entries + train_sc_entries * sc_oversample + pseudo_entries
 
         train_ds = UnifiedDataset(all_train, label_map, bg_pool=bg_pool, training=True,
                                   mixup_prob=args.mixup_prob, bg_mix_prob=args.bg_mix_prob)
@@ -736,8 +826,13 @@ def main():
             train_domains, train_labels = summarize_entries(all_train, label_map)
             _, val_labels = summarize_entries(sc_val, label_map)
             print(f"Total train: {len(train_ds)}, val: {len(val_ds)}")
+            if args.train_all_soundscapes:
+                print("WARNING: --train_all_soundscapes is set; validation is leaky and for monitoring only.")
             print(f"Train domains: {train_domains}")
             print(f"Train species: {len(train_labels)}, val evaluable species upper bound: {len(val_labels)}")
+            missing_train = set(label_map) - train_labels
+            if missing_train:
+                print(f"WARNING: {len(missing_train)} taxonomy species have no training positives in this split.")
 
     # --- DataLoaders ---
     mp_ctx = mp.get_context("spawn")
@@ -787,7 +882,10 @@ def main():
     model = BirdModel(pretrained=True, model_name=model_name).to(device)
 
     if args.resume:
-        ckpt_path = args.resume if os.path.isabs(args.resume) else os.path.join(CFG.CHECKPOINT_DIR, args.resume)
+        if os.path.isabs(args.resume) or os.path.exists(args.resume):
+            ckpt_path = args.resume
+        else:
+            ckpt_path = os.path.join(CFG.CHECKPOINT_DIR, args.resume)
         state = torch.load(ckpt_path, map_location=device)
         model.load_state_dict(state, strict=False)
         if is_main(rank):
@@ -826,7 +924,8 @@ def main():
 
         train_loss = train_one_epoch(
             model, train_loader, optimizer, criterion, device, spec_aug,
-            scaler=scaler, mel_transform=mel_transform, precomputed=args.precomputed)
+            scaler=scaler, mel_transform=mel_transform, precomputed=args.precomputed,
+            precomputed_mixup_prob=args.precomputed_mixup_prob if args.precomputed else 0.0)
 
         # Rank 0 validates on the full soundscape validation set. Other ranks wait
         # before the next epoch so DDP does not advance with a different schedule.
@@ -856,11 +955,14 @@ def main():
                 print("  Per-taxon AUC:")
                 for taxon, aucs in sorted(taxon_aucs.items()):
                     print(f"    {taxon}: {np.mean(aucs):.4f} ({len(aucs)} species)")
-        if dist.is_initialized():
-            dist.barrier()
+        ddp_barrier(device)
         scheduler.step()
 
     if is_main(rank):
+        final_path = os.path.join(CFG.CHECKPOINT_DIR, f"last_{args.save_tag}.pt")
+        raw_model = model.module if hasattr(model, "module") else model
+        torch.save(raw_model.state_dict(), final_path)
+        print(f"Saved final model: {final_path}")
         print(f"\nBest soundscape validation AUC: {best_auc:.4f}")
         print(f"Export with: python -m src.export_onnx --checkpoint best_{args.save_tag}.pt "
               f"--backbone {model_name}")

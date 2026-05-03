@@ -30,16 +30,19 @@ python -m src.preprocess --mode soundscape_unlabeled
 # Backbone 1: EfficientNetV2-S
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone v2s --epochs 40 --batch_size 128 --lr 3e-4 \
+    --precomputed --precomputed_mixup_prob 0.3 \
     --num_workers 4 --save_tag v4_v2s
 
 # Backbone 2: eca_nfnet_l0
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone nfnet --epochs 40 --batch_size 128 --lr 3e-4 \
+    --precomputed --precomputed_mixup_prob 0.3 \
     --num_workers 4 --save_tag v4_nfnet
 
 # Backbone 3: RegNetY-016
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone regnety --epochs 40 --batch_size 128 --lr 3e-4 \
+    --precomputed --precomputed_mixup_prob 0.3 \
     --num_workers 4 --save_tag v4_regnety
 ```
 
@@ -55,13 +58,14 @@ python -m src.train --backbone v2s --epochs 40 --batch_size 48 --lr 2e-4 \
 ```bash
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone v2s --epochs 40 --batch_size 256 --lr 3e-4 \
-    --num_workers 4 --precomputed --save_tag v4_v2s
+    --num_workers 4 --precomputed --precomputed_mixup_prob 0.3 --save_tag v4_v2s
 ```
 
 ### Checkpoints after Phase 1
 - `checkpoints/best_v4_v2s.pt`
 - `checkpoints/best_v4_nfnet.pt`
 - `checkpoints/best_v4_regnety.pt`
+- `checkpoints/last_*.pt` is also saved. For runs using `--train_all_soundscapes`, prefer `last_*` because `best_*` is selected by leaky validation.
 
 ### Quick LB check: export best single model and submit
 ```bash
@@ -79,22 +83,29 @@ python -m src.export_onnx --checkpoint best_v4_v2s.pt --backbone v2s --output mo
 python -m src.pseudo_label \
     --checkpoints best_v4_v2s.pt best_v4_nfnet.pt best_v4_regnety.pt \
     --backbones v2s nfnet regnety \
-    --round 1 --threshold 0.7 --power_gamma 1.5 --tta
+    --round 1 --threshold 0.7 --power_gamma 1.5 --precomputed --tta
+
+# Convert current round pseudo labels into fast training mels
+python -m src.preprocess --mode pseudo \
+    --pseudo_path data/pseudo_labels_r1.csv --soft_threshold 0.1
 
 # Retrain each backbone with pseudo-labels
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone v2s --epochs 30 --batch_size 128 --lr 1e-4 \
-    --pseudo --num_workers 4 --resume checkpoints/best_v4_v2s.pt \
+    --precomputed --precomputed_mixup_prob 0.3 --pseudo --train_all_soundscapes \
+    --num_workers 4 --resume best_v4_v2s.pt \
     --save_tag v4_v2s_r1
 
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone nfnet --epochs 30 --batch_size 128 --lr 1e-4 \
-    --pseudo --num_workers 4 --resume checkpoints/best_v4_nfnet.pt \
+    --precomputed --precomputed_mixup_prob 0.3 --pseudo --train_all_soundscapes \
+    --num_workers 4 --resume best_v4_nfnet.pt \
     --save_tag v4_nfnet_r1
 
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone regnety --epochs 30 --batch_size 128 --lr 1e-4 \
-    --pseudo --num_workers 4 --resume checkpoints/best_v4_regnety.pt \
+    --precomputed --precomputed_mixup_prob 0.3 --pseudo --train_all_soundscapes \
+    --num_workers 4 --resume best_v4_regnety.pt \
     --save_tag v4_regnety_r1
 ```
 
@@ -104,11 +115,15 @@ torchrun --standalone --nproc_per_node=8 -m src.train \
 python -m src.pseudo_label \
     --checkpoints best_v4_v2s_r1.pt best_v4_nfnet_r1.pt best_v4_regnety_r1.pt \
     --backbones v2s nfnet regnety \
-    --round 2 --threshold 0.6 --power_gamma 1.5 --tta
+    --round 2 --threshold 0.6 --power_gamma 1.5 --precomputed --tta
+
+python -m src.preprocess --mode pseudo \
+    --pseudo_path data/pseudo_labels_r2.csv --soft_threshold 0.1
 
 torchrun --standalone --nproc_per_node=8 -m src.train \
     --backbone v2s --epochs 25 --batch_size 128 --lr 5e-5 \
-    --pseudo --num_workers 4 --resume checkpoints/best_v4_v2s_r1.pt \
+    --precomputed --precomputed_mixup_prob 0.3 --pseudo --train_all_soundscapes \
+    --num_workers 4 --resume best_v4_v2s_r1.pt \
     --save_tag v4_v2s_r2
 # (repeat for nfnet, regnety)
 ```
@@ -116,8 +131,10 @@ torchrun --standalone --nproc_per_node=8 -m src.train \
 ### Round 3-4 (same pattern, lower thresholds)
 
 ```bash
-# Round 3: --threshold 0.5 --power_gamma 1.3 --lr 3e-5 --epochs 20
-# Round 4: --threshold 0.4 --power_gamma 1.3 --lr 1e-5 --epochs 15
+# Round 3: pseudo_label --precomputed --threshold 0.5 --power_gamma 1.3;
+#          preprocess --mode pseudo with data/pseudo_labels_r3.csv;
+#          train --precomputed --pseudo --train_all_soundscapes --lr 3e-5 --epochs 20
+# Round 4: same pattern with --threshold 0.4 --power_gamma 1.3 --lr 1e-5 --epochs 15
 ```
 
 ---

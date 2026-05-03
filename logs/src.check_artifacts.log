@@ -1,15 +1,18 @@
-[2026-05-02T16:46:13.548133597Z] taxonomy: 234 classes
-[2026-05-02T16:46:13.548326449Z] class_name
-[2026-05-02T16:46:13.548489683Z] Aves        162
-[2026-05-02T16:46:13.548665727Z] Amphibia     35
-[2026-05-02T16:46:13.548848710Z] Insecta      28
-[2026-05-02T16:46:13.549006480Z] Mammalia      8
-[2026-05-02T16:46:13.549148802Z] Reptilia      1
-[2026-05-02T16:46:13.549297524Z] train.csv rows: 35549, focal species: 206
-[2026-05-02T16:46:13.549478580Z] train_soundscapes_labels rows: 1478, files: 66, species: 75
-[2026-05-02T16:46:13.549647691Z] taxonomy classes without focal audio: 28
-[2026-05-02T16:46:13.549782315Z] precomputed/focal: 106647 rows
-[2026-05-02T16:46:13.549938520Z] precomputed/soundscape_labeled: 1478 rows
-[2026-05-02T16:46:13.550095565Z] precomputed/pseudo: missing
-[2026-05-02T16:46:13.550235499Z] 
-[2026-05-02T16:46:13.550400312Z] OK
+root@app-53e35fd6a2cf480a8afb2cd2d885f1ce-868b8df95f-pkh26:/mnt/afs/zhengmingkai/hhy/Bird
+CLET# python -m src.check_artifacts --check_precomputed
+taxonomy: 234 classes
+class_name
+Aves        162
+Amphibia     35
+Insecta      28
+Mammalia      8
+Reptilia      1
+train.csv rows: 35549, focal species: 206
+train_soundscapes_labels rows: 1478, files: 66, species: 75
+taxonomy classes without focal audio: 28
+precomputed/focal: 106647 rows
+precomputed/soundscape_labeled: 1478 rows
+precomputed/soundscape_unlabeled: 127157 rows
+precomputed/pseudo: missing
+
+OK

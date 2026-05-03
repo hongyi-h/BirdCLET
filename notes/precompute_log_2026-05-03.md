@@ -49,3 +49,30 @@ torchrun --standalone --nproc_per_node=8 -m src.train \
   --backbone v2s --epochs 40 --batch_size 128 --lr 3e-4 \
   --precomputed --num_workers 4 --save_tag v4_v2s
 ```
+
+## Training Launch Failure
+
+`logs/train.log` shows the first DDP launch failed before data/model loading:
+
+- Command effectively requested `world_size=8`.
+- MetaX/PyTorch reported device ids 1-7 do not exist.
+- ranks 1-7 failed at `torch.cuda.set_device(local_rank)`.
+- Root error: `torch.AcceleratorError: CUDA error: invalid device ordinal`.
+
+Decision:
+- This is a GPU visibility/resource mismatch, not a BirdCLEF data or model bug.
+- Relaunch with `--nproc_per_node` equal to the visible device count.
+- If the job is supposed to have 8 GPUs, first make all 8 visible to the process environment, for example via the cluster scheduler or `MTHREADS_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`.
+
+Before relaunching on the server:
+
+```bash
+python - <<'PY'
+import os, torch
+print("CUDA_VISIBLE_DEVICES=", os.environ.get("CUDA_VISIBLE_DEVICES"))
+print("MTHREADS_VISIBLE_DEVICES=", os.environ.get("MTHREADS_VISIBLE_DEVICES"))
+print("torch.cuda.device_count()=", torch.cuda.device_count())
+for i in range(torch.cuda.device_count()):
+    print(i, torch.cuda.get_device_name(i))
+PY
+```
