@@ -36,6 +36,8 @@ Current strategic direction is sound:
 
 ## Current Experiment State
 
+Update 2026-05-04: local competition data has moved to `data/BirdCLEF+ 2026/`; external public datasets remain under `data/`; pretrained SavedModels are under `pretrained_models/`. See `notes/path_layout_2026-05-04.md`.
+
 Observed in `train.log`:
 - Command shown: `python -m src.train --backbone v2s --epochs 40 --batch_size 48 --lr 2e-4 --num_workers 4`
 - Actual printed loop says 30 epochs, suggesting this log may be from an older `train.py` state or stale argument handling.
@@ -46,7 +48,7 @@ Observed in `train.log`:
   - epoch 3: 0.9410
 - Run was very slow on the remote MetaX environment due to GPU queue/context delays and likely per-sample OGG decode from AFS.
 
-Current local workspace has only CSV metadata under `data/`; audio directories are not present locally. Full training/preprocessing cannot run in this workspace until `data/train_audio`, `data/train_soundscapes`, and test/sample files are available or paths are mounted.
+The earlier local-only-metadata limitation is obsolete. The current local workspace has full competition data under `data/BirdCLEF+ 2026/`.
 
 ## Highest-Risk Issues To Fix Before Long Runs
 

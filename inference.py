@@ -84,9 +84,13 @@ if IS_KAGGLE:
         os.path.join(d, "specialist_mapping.npy") for d in MAIN_MODEL_DIRS
     ]
 else:
-    TEST_DIR = "data/test_soundscapes"
-    TAXONOMY_PATH = "data/taxonomy.csv"
-    SAMPLE_SUB_PATH = "data/sample_submission.csv"
+    LOCAL_COMP_DIR = os.environ.get(
+        "BIRDCLEF_COMPETITION_DATA_DIR",
+        os.path.join("data", "BirdCLEF+ 2026"),
+    )
+    TEST_DIR = os.path.join(LOCAL_COMP_DIR, "test_soundscapes")
+    TAXONOMY_PATH = os.path.join(LOCAL_COMP_DIR, "taxonomy.csv")
+    SAMPLE_SUB_PATH = os.path.join(LOCAL_COMP_DIR, "sample_submission.csv")
     MAIN_MODEL_DIRS = ["checkpoints"]
     SPECIALIST_DIRS = ["checkpoints"]
     SPECIALIST_MAPPING_PATHS = ["checkpoints/specialist_mapping.npy"]

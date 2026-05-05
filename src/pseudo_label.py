@@ -41,7 +41,7 @@ def parse_args():
                         help="Min per-species prob after power scaling to include")
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--precomputed", action="store_true",
-                        help="Use data/precomputed/soundscape_unlabeled mels instead of decoding .ogg files")
+                        help="Use precomputed soundscape_unlabeled mels instead of decoding .ogg files")
     parser.add_argument("--tta", action="store_true", help="Test-time augmentation")
     return parser.parse_args()
 
@@ -295,11 +295,12 @@ def generate_pseudo_labels(args):
         if col not in pseudo_df.columns:
             pseudo_df[col] = 0.0 if col not in {"filename", "start"} else ""
     pseudo_df = pseudo_df[output_columns]
-    out_path = os.path.join(CFG.DATA_DIR, f"pseudo_labels_r{args.round}.csv")
+    os.makedirs(CFG.PSEUDO_LABEL_DIR, exist_ok=True)
+    out_path = os.path.join(CFG.PSEUDO_LABEL_DIR, f"pseudo_labels_r{args.round}.csv")
     pseudo_df.to_csv(out_path, index=False)
 
     # Also save as default for training
-    default_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
+    default_path = CFG.PSEUDO_LABEL_PATH
     pseudo_df.to_csv(default_path, index=False)
 
     print(f"\nSaved {len(pseudo_df)} pseudo-labeled segments to {out_path}")

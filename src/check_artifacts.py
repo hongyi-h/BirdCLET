@@ -19,6 +19,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check_precomputed", action="store_true")
     parser.add_argument("--check_models", action="store_true")
+    parser.add_argument("--check_external", action="store_true",
+                        help="Check local Perch/SED/reference model datasets")
     parser.add_argument("--model_dir", default=CFG.CHECKPOINT_DIR)
     return parser.parse_args()
 
@@ -199,6 +201,39 @@ def check_models(model_dir, errors):
             errors.append(f"failed to load ONNX {path}: {exc}")
 
 
+def check_external_artifacts(errors):
+    print("external data/model paths:")
+    print(f"  competition data: {CFG.DATA_DIR}")
+    print(f"  external data: {CFG.EXTERNAL_DATA_DIR}")
+    print(f"  pretrained models: {CFG.PRETRAINED_MODEL_DIR}")
+
+    require(os.path.exists(CFG.PERCH_ONNX_PATH), f"Missing Perch ONNX: {CFG.PERCH_ONNX_PATH}", errors)
+    require(
+        os.path.exists(CFG.PERCH_LABELS_PATH) or os.path.exists(CFG.PERCH_TF_LABELS_PATH),
+        f"Missing Perch labels: {CFG.PERCH_LABELS_PATH} or {CFG.PERCH_TF_LABELS_PATH}",
+        errors,
+    )
+
+    sed_folds = sorted(glob.glob(os.path.join(CFG.SED_MODEL_DIR, "sed_fold*.onnx")))
+    require(len(sed_folds) == 5, f"Expected 5 SED folds in {CFG.SED_MODEL_DIR}, found {len(sed_folds)}", errors)
+
+    perch_meta_arrays = os.path.join(CFG.PERCH_META_DIR, "full_perch_arrays.npz")
+    perch_meta_table = os.path.join(CFG.PERCH_META_DIR, "full_perch_meta.parquet")
+    require(os.path.exists(perch_meta_arrays), f"Missing Perch meta arrays: {perch_meta_arrays}", errors)
+    require(os.path.exists(perch_meta_table), f"Missing Perch meta table: {perch_meta_table}", errors)
+
+    tf_saved_model = os.path.join(CFG.PERCH_TF_MODEL_DIR, "saved_model.pb")
+    require(os.path.exists(tf_saved_model), f"Missing Perch TF SavedModel: {tf_saved_model}", errors)
+
+    if os.path.exists(CFG.TRAIN_AUDIO_HEAD_PATH):
+        print(f"train-audio head: {CFG.TRAIN_AUDIO_HEAD_PATH}")
+    else:
+        print(f"train-audio head: missing optional {CFG.TRAIN_AUDIO_HEAD_PATH}")
+
+    print(f"perch onnx: {CFG.PERCH_ONNX_PATH}")
+    print(f"sed folds: {len(sed_folds)}")
+
+
 def main():
     args = parse_args()
     errors = []
@@ -212,6 +247,8 @@ def main():
     if args.check_models:
         check_specialist_mapping(args.model_dir, errors)
         check_models(args.model_dir, errors)
+    if args.check_external:
+        check_external_artifacts(errors)
 
     if errors:
         print("\nERRORS:")

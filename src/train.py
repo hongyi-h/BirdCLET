@@ -839,9 +839,9 @@ def main():
         pseudo_entries = []
         if args.pseudo:
             pseudo_name = f"pseudo_labels_r{args.pseudo_round}.csv" if args.pseudo_round > 0 else "pseudo_labels.csv"
-            pseudo_path = os.path.join(CFG.DATA_DIR, pseudo_name)
+            pseudo_path = os.path.join(CFG.PSEUDO_LABEL_DIR, pseudo_name)
             if not os.path.exists(pseudo_path) and args.pseudo_round > 0:
-                pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
+                pseudo_path = CFG.PSEUDO_LABEL_PATH
             if os.path.exists(pseudo_path):
                 pseudo_df = pd.read_csv(pseudo_path)
                 pseudo_entries = build_pseudo_entries(pseudo_df, label_map)

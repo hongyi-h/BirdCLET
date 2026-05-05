@@ -4,3 +4,4 @@ __pycache__/
 data/
 reference/
 pretrained_models/
+outputs/

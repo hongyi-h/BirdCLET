@@ -1,0 +1,16 @@
+{
+  "id": "benfromhrbust/birdclef-2026-perch-head-v2-train-codex",
+  "title": "BirdCLEF 2026 Perch Head V2 Train Codex",
+  "code_file": "kernel.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "competition_sources": [
+    "birdclef-2026"
+  ],
+  "dataset_sources": [
+    "rishikeshjani/perch-onnx-for-birdclef-2026"
+  ]
+}

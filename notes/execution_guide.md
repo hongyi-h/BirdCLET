@@ -5,38 +5,72 @@
 Confirmed anchor:
 - `model_v2s_full_melmix.onnx`: public LB `0.801`.
 
+Local path layout:
+- Competition data: `data/BirdCLEF+ 2026/`
+- External public datasets: `data/`
+- Pretrained SavedModels: `pretrained_models/`
+- Generated mels/pseudo labels: `data/precomputed/` and `data/pseudo_labels*.csv`
+
 After reviewing the local reference notebooks in `reference/`, the highest-leverage path is no longer "train three more versions of our CNN first." The 0.94+ public notebooks are driven by Perch v2 ONNX embeddings/logits, 12-window sequence modeling, public distilled SED folds, and per-class rank blending.
 
 Immediate priority:
 
 1. Reproduce a Perch/ProtoSSM + public SED reference branch.
-2. Submit it alone as a high baseline.
-3. Rank-blend our `model_v2s_full_melmix.onnx` at low weight, initially 5-15%, and keep it only if public LB improves.
-4. Resume nfnet/regnety full-data training only after the Perch+SED blend is working.
+2. Prefer the train-audio-head reference branch first: `ProtoSSM + SED + train-audio head`.
+3. Submit it alone as a high baseline.
+4. Rank-blend our `model_v2s_full_melmix.onnx` at low weight, initially 5-10%, and keep it only if public LB improves or drops negligibly with a plausible private-diversity reason.
+5. Resume nfnet/regnety full-data training only after the Perch+SED blend is working.
 
 See `notes/reference_notebook_design_review_2026-05-04.md` for the first-principles rationale.
+See `notes/strategy_rethink_2026-05-04.md` for the current submission sequence.
 
 ### Rank-blend branch CSVs
 
-After a reference notebook produces `submission_protossm.csv` and `submission_sed.csv`, blend them with strict row/column checks:
+After a reference notebook produces branch CSVs, blend them with strict row/column checks:
 
 ```bash
 python -m src.blend_submissions \
     --inputs submission_protossm.csv submission_sed.csv \
     --weights 0.60 0.40 \
     --output submission.csv \
-    --sample data/sample_submission.csv
+    --sample 'data/BirdCLEF+ 2026/sample_submission.csv'
 ```
 
-To test our CNN as a small diversity branch:
+Preferred train-audio-head baseline:
 
 ```bash
 python -m src.blend_submissions \
-    --inputs submission_protossm.csv submission_sed.csv submission_cnn.csv \
-    --weights 0.55 0.35 0.10 \
+    --inputs submission_protossm.csv submission_sed.csv submission_head.csv \
+    --weights 0.50 0.35 0.15 \
     --output submission.csv \
-    --sample data/sample_submission.csv
+    --sample 'data/BirdCLEF+ 2026/sample_submission.csv'
 ```
+
+To test our CNN as a small diversity branch on top of the head baseline:
+
+```bash
+python -m src.blend_submissions \
+    --inputs submission_protossm.csv submission_sed.csv submission_head.csv submission_cnn.csv \
+    --weights 0.475 0.325 0.125 0.075 \
+    --output submission.csv \
+    --sample 'data/BirdCLEF+ 2026/sample_submission.csv'
+```
+
+Check that the local layout is complete:
+
+```bash
+python -m src.check_artifacts --check_external
+```
+
+Start the first controlled experiment on the cloud server, not locally:
+
+```bash
+python -m src.perch_sed_head_experiment \
+    --fallback_train_count 20 \
+    --output_dir outputs/perch_sed_head_direct_cloud_probe20
+```
+
+Current policy: do not run experiments locally. See `notes/experiment_execution_policy_2026-05-04.md`.
 
 ## Prerequisites
 

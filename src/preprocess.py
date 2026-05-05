@@ -331,7 +331,7 @@ def process_pseudo_labels(mel_transform, pseudo_path, confidence_threshold, soft
     os.makedirs(out_dir, exist_ok=True)
 
     if pseudo_path is None:
-        pseudo_path = os.path.join(CFG.DATA_DIR, "pseudo_labels.csv")
+        pseudo_path = CFG.PSEUDO_LABEL_PATH
     if not os.path.exists(pseudo_path):
         raise FileNotFoundError(f"Pseudo-label CSV not found: {pseudo_path}")
 
