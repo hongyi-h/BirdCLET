@@ -1,0 +1,26 @@
+{
+  "id": "benfromhrbust/birdclef-2026-0944-head-v2-codex",
+  "title": "BirdCLEF 2026 0.944 Head V2 Codex",
+  "code_file": "kernel.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "competition_sources": [
+    "birdclef-2026"
+  ],
+  "dataset_sources": [
+    "tuckerarrants/bc2026-distilled-sed-public",
+    "konbu17/bird26-train-audio-head-v1",
+    "benfromhrbust/birdclef-2026-perch-head-v2-weights-codex",
+    "jaejohn/perch-meta",
+    "rishikeshjani/perch-onnx-for-birdclef-2026"
+  ],
+  "model_sources": [
+    "google/bird-vocalization-classifier/TensorFlow2/perch_v2_cpu/1"
+  ],
+  "kernel_sources": [
+    "ashok205/tf-wheels"
+  ]
+}

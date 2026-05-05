@@ -12,7 +12,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+
+try:
+    from sklearn.metrics import roc_auc_score as _sklearn_roc_auc_score
+except ImportError:  # pragma: no cover - used in lightweight local envs
+    _sklearn_roc_auc_score = None
 
 import src.config as CFG
 from src.blend_submissions import percentile_rank
@@ -227,6 +231,22 @@ def blend_predictions(preds: list[np.ndarray], weights: np.ndarray) -> np.ndarra
     return out.astype(np.float32)
 
 
+def roc_auc_score_binary(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    if _sklearn_roc_auc_score is not None:
+        return float(_sklearn_roc_auc_score(y_true, y_score))
+
+    y_true = np.asarray(y_true, dtype=np.uint8)
+    y_score = np.asarray(y_score, dtype=np.float64)
+    positives = int(y_true.sum())
+    negatives = int(len(y_true) - positives)
+    if positives <= 0 or negatives <= 0:
+        raise ValueError("ROC-AUC requires at least one positive and one negative")
+    ranks = pd.Series(y_score).rank(method="average").to_numpy(dtype=np.float64)
+    pos_rank_sum = float(ranks[y_true == 1].sum())
+    auc = (pos_rank_sum - positives * (positives + 1) / 2.0) / (positives * negatives)
+    return float(auc)
+
+
 def score_macro_auc(
     y_true: np.ndarray,
     y_score: np.ndarray,
@@ -240,7 +260,7 @@ def score_macro_auc(
         negatives = int(len(y_true) - positives)
         auc = np.nan
         if positives > 0 and negatives > 0:
-            auc = float(roc_auc_score(y_true[:, i], y_score[:, i]))
+            auc = roc_auc_score_binary(y_true[:, i], y_score[:, i])
             aucs.append(auc)
         rows.append(
             {
